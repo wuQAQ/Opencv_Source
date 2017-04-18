@@ -1,5 +1,5 @@
-CXX ?= g++
-
+CXX ?= g++ 
+CXXFLAGS += -std=gnu++11
 CXXFLAGS += -c -Wall $(shell pkg-config --cflags opencv)
 LDFLAGS += $(shell pkg-config --libs --static opencv)
 
