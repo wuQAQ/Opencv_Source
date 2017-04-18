@@ -1,12 +1,28 @@
 #include "opencv2/opencv.hpp"
 #include <time.h>
+#include <vector>
+#include <iostream>
 
+using namespace std;
 using namespace cv;
 
 int main(int, char** argv)
 {
+    vector<Mat> test(9);
+    Mat M(2,2, CV_8UC3, Scalar(0,0,255)); 
+
+    for (int i = 0; i < 9; i++)
+    {
+        test[i] = M;
+    }
+
     FileStorage fs("test.yml", FileStorage::WRITE);
 
+    for (int i = 0; i < 9; i++)
+    {
+        string str = i.
+        fs << 
+    }
     fs << "frameCount" << 5;
     time_t rawtime; time(&rawtime);
     fs << "calibrationDate" << asctime(localtime(&rawtime));
