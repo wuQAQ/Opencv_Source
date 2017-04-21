@@ -2,37 +2,34 @@
 #include <iostream>
 #include <vector>
 
-
 using namespace std;
 using namespace cv;
 
 int main(int, char** argv)
 {
-    FileStorage fs("test.yml", FileStorage::WRITE);
-    vector<Mat> test;
-    Mat temp = Mat::zeros(3, 3, CV_64F);
-    for (int i = 0; i < 9; i++)
-   {
-        Mat tem_frame = temp.clone();
-        test.push_back(temp.clone());
-        //test.at(0) = temp;
-    }
-    
-    cout << "temp: " << endl << temp << endl;
+  Mat col = Mat::ones(5, 1, CV_64F);
+  Mat ccol = Mat::zeros(5, 1, CV_64F);
+  Mat test = Mat::zeros(5, 10, CV_64F);
 
-    for(int i = 0; i < test.size(); i++)
+  cout << "col: " << endl << col << endl;
+  cout << "ccol: " << endl << ccol << endl;
+    for (int i = 0; i < 10; i++)
     {
-        cout << i << endl << test[i] << endl;
+      if (i%2 == 0)
+      {
+        cout << i << endl;
+        test.col(i) += col.col(0);
+      }
+      else
+      {
+        test.col(i) += ccol.col(0);
+      }
     }
-
-    cout << "write" << endl;
-
-    fs << "a" << test.at(1);
-    fs << "b" << test.at(2);
     
+    cout << "test:" << endl << test << endl;
+    cout << "test size: " << test.size() << endl;
+    cout << "test width: " << test.width() << endl;
 
-    fs.release();
-
-    
+    cout << "test height: " << test.height() << endl;
     return 0;
 }

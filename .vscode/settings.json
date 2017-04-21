@@ -4,5 +4,9 @@
     "background.customImages": [
         "file:///home/wuqaq/Pictures/aa.png"
     ],
-    "background.enabled": true
+    "background.enabled": true,
+    "files.associations": {
+        "iosfwd": "cpp",
+        "iostream": "cpp"
+    }
 }
