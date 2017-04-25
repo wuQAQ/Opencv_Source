@@ -1,0 +1,33 @@
+#include "opencv2/opencv.hpp"
+#include <iostream>
+#include <vector>
+#include <sstream>
+#include <string>
+#include <stdlib.h>
+
+using namespace std;
+using namespace cv;
+
+int main(int, char** argv)
+{
+    FileStorage fs("test.yml", FileStorage::WRITE);
+    vector<Mat> test;
+    Mat temp = Mat::eye(3, 3, CV_64F);
+
+    for (int i = 0; i < 9; i++)
+   {
+        test.push_back(temp.clone());
+    }
+    
+    cout << "temp: " << endl << temp << endl;
+    
+    for(int i = 0; i < 9; i++)
+    {
+        String str = "Mat_" + to_string(i);
+        fs << str << test.at(i);
+    }
+    fs.release();
+
+    
+    return 0;
+}
