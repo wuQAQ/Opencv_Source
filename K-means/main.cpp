@@ -19,12 +19,25 @@ struct Tuple {
 
 void MyKmeans(vector<Tuple> tuples, int clusters);
 float getDistXY(Tuple t1, Tuple t2);
-int clusterOfTuple(Tuple means[],Tuple tuple);
+int clusterOfTuple(vector<Tuple> means,Tuple tuple, int clusterCount);
+float getVal(vector<vector<Tuple> > clusters, vector<Tuple> means, int clusterCount);
+Tuple getMeans(vector<Tuple> cluster);
+
+Mat img(500, 500, CV_8UC3);
+
+Scalar colorTab[] =     //因为最多只有5类，所以最多也就给5个颜色
+{
+    Scalar(0, 0, 255),
+    Scalar(0,255,0),
+    Scalar(255,100,100),
+    Scalar(255,0,255),
+    Scalar(0,255,255)
+};
+
 
 int main(void)
 {
     const int MAX_CLUSTERS = 5;
-    Mat img(500, 500, CV_8UC3);
     RNG rng(12345); //随机数产生器
 
     random_device rd;
@@ -83,7 +96,7 @@ int main(void)
 
 void MyKmeans(vector<Tuple> tuples, int clusterCount)
 {
-    vector<Tuple> clusters(clusterCount);
+    vector<vector<Tuple> > clusters(clusterCount);
     vector<Tuple> center(clusterCount);
 
     //默认一开始将前K个元组的值作为k个簇的质心（均值）
@@ -100,11 +113,73 @@ void MyKmeans(vector<Tuple> tuples, int clusterCount)
     }
 
     int label = 0;
-    for (int i = 0; i != tuples.size(); ++i)
-    {
-        label = clusterOfTuple(center, tuples[i]);
-
+    for (int i = 0; i != (int)tuples.size(); ++i)
+    {   
+        label = clusterOfTuple(center, tuples[i], clusterCount);
+        clusters[label].push_back(tuples[i]);
     }
+
+    img = Scalar::all(0);
+
+    for (label = 0; label < clusterCount; label++)
+    {
+        cout << "第" << label+1 << "个簇: " << endl;
+        vector<Tuple> t = clusters[label];
+        for (int i = 0; i < (int)t.size(); i++)
+        {
+            cout << "(" << t[i].x << "," << t[i].y << ")" << "  ";
+            Point ipt = Point(t[i].x, t[i].y);
+            circle(img, ipt, 2, colorTab[label], FILLED, LINE_AA);
+        }
+        cout << endl;
+    }
+
+    imshow("kmeans", img);
+
+    float oldVal = -1;
+    float newVal = getVal(clusters, center, clusterCount);
+
+    int name = 0;
+    while(abs(newVal - oldVal) >= 1)
+    {
+        for (int i = 0; i < clusterCount; i++)
+        {
+            center[i] = getMeans(clusters[i]);
+        }
+
+        oldVal = newVal;
+        newVal = getVal(clusters, center, clusterCount);
+        for (int i = 0; i < clusterCount; i++)
+        {
+            clusters[i].clear();
+        }
+
+        for (int i = 0; i != (int)tuples.size(); ++i)
+        {
+            label = clusterOfTuple(center, tuples[i], clusterCount);
+            clusters[label].push_back(tuples[i]);
+        }
+
+        img = Scalar::all(0);
+        for (label = 0; label < clusterCount; label++)
+        {
+            cout << "第" << label+1 << "个簇: " << endl;
+            vector<Tuple> t = clusters[label];
+            for (int i = 0; i < (int)t.size(); i++)
+            {
+                cout << "(" << t[i].x << "," << t[i].y << ")" << "  ";
+                Point ipt = Point(t[i].x, t[i].y);
+                circle(img, ipt, 2, colorTab[label], FILLED, LINE_AA);
+            }
+            cout << endl;
+        }
+        String str = "times:" + to_string(name);
+        imshow(str, img);
+        cout << "newVal: " << newVal << endl;
+        cout << "oldVal: " << oldVal << endl;
+        cout << "value: " << abs(newVal - oldVal) << endl;
+    }
+
 
 }
 
@@ -115,7 +190,7 @@ float getDistXY(Tuple t1, Tuple t2)
 }
 
 //根据质心，决定当前元组属于哪个簇
-int clusterOfTuple(Tuple means[],Tuple tuple, int clusterCount)
+int clusterOfTuple(vector<Tuple> means,Tuple tuple, int clusterCount)
 {
 	float dist=getDistXY(means[0],tuple);
 	float tmp;
@@ -130,4 +205,37 @@ int clusterOfTuple(Tuple means[],Tuple tuple, int clusterCount)
         }
 	}
 	return label;	
+}
+
+//获得给定簇集的平方误差
+float getVal(vector<vector<Tuple> > clusters, vector<Tuple> means, int clusterCount)
+{
+	float var = 0;
+	for (int i = 0; i < clusterCount; i++)
+	{
+		vector<Tuple> t = clusters[i];
+		for (int j = 0; j < (int)t.size(); j++)
+		{
+			var += getDistXY(t[j],means[i]);
+		}
+	}
+	//cout<<"sum:"<<sum<<endl;
+	return var;
+}
+
+//获得当前簇的均值（质心）
+Tuple getMeans(vector<Tuple> cluster)
+{
+	int num = cluster.size();
+	double meansX = 0, meansY = 0;
+	Tuple t;
+	for (int i = 0; i < num; i++)
+	{
+		meansX += cluster[i].x;
+		meansY += cluster[i].y;
+	}
+	t.x = meansX / num;
+	t.y = meansY / num;
+	return t;
+	//cout<<"sum:"<<sum<<endl;
 }
