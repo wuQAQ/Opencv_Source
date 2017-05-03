@@ -152,8 +152,8 @@ void ChangeCenter(vector<float> & dist, Mat & center)
     float temp = *max - *min;
     cout << "temp: " << temp << endl;
     Point maxPt = center.at<Point2f>(maxLabel);
-    Point newPt1(maxPt.x-(10), maxPt.y);
-    Point newPt2(maxPt.x+(10), maxPt.y);
+    Point newPt1(maxPt.x-(temp/3), maxPt.y);
+    Point newPt2(maxPt.x+(temp/3), maxPt.y);
     center.at<Point2f>(maxLabel) = newPt1;
     center.at<Point2f>(minLabel) = newPt2;
 }
