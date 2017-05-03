@@ -16,6 +16,7 @@
         "random": "cpp",
         "iomanip": "cpp",
         "system_error": "cpp",
-        "type_traits": "cpp"
+        "type_traits": "cpp",
+        "sstream": "cpp"
     }
 }
