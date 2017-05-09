@@ -66,11 +66,11 @@ int main( int /*argc*/, char** /*argv*/ )
         }
 
         
-        //showImage(points, clusterCount, sampleCount, "Source");
+        showImage(points, clusterCount, sampleCount, "Source");
         
         randShuffle(points, 1, &rng);
 
-        //showImage(points, clusterCount, sampleCount, "randShuffle");
+        showImage(points, clusterCount, sampleCount, "randShuffle");
 
         MyKmeans(points, clusterCount);
 
@@ -82,6 +82,7 @@ int main( int /*argc*/, char** /*argv*/ )
     return 0;
 }
 
+// 显示当前图片
 void showImage(Mat points, int clusterCount, int sampleCount, String name)
 {
     img = Scalar::all(0);
