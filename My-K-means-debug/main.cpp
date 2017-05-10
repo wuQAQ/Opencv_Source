@@ -29,6 +29,8 @@ float GetMaxDistance(Point pt1, vector<Point> pts);
 bool IsCenter(vector<float> & dist);
 void ChangeCenter(vector<float> & dist, Mat & center);
 
+static int times = 0;
+
 Scalar colorTab[] =
 {
     Scalar(0, 0, 255),
@@ -75,8 +77,12 @@ int main( int /*argc*/, char** /*argv*/ )
         MyKmeans(points, clusterCount);
 
         char key = (char)waitKey();
+        destroyAllWindows();
+        times = 0;
         if( key == 27 || key == 'q' || key == 'Q' ) // 'ESC'
+        {
             break;
+        }
     }
 
     return 0;
@@ -107,14 +113,14 @@ void MyKmeans(Mat & points, int clusterCount)
 {
     vector<vector<Point> > clusterGroup(clusterCount);
     vector<float> dist;
+
     //随机设置中心点
     Mat center = points.rowRange(0, clusterCount);
     vector<Point> means(clusterCount);
 
-    dist = ClassifyPoint(points, clusterCount, center, means, "first");
+    //dist = ClassifyPoint(points, clusterCount, center, means, "RandCenter");
   
     // 重新设置中心点
-    int times = 0;
     while(1)
     {
         do
@@ -125,13 +131,13 @@ void MyKmeans(Mat & points, int clusterCount)
             //cout << str << endl;
         } while(!UpdateCenter(center, means, 10.0));
 
-        if (!IsCenter(dist))
+        if (!IsCenter(dist) && times < 10)
         {
             ChangeCenter(dist, center);
         }
         else 
             break;
-        
+
         cout << "center: " << center << endl;
 
         waitKey();
@@ -227,6 +233,7 @@ vector<float> ClassifyPoint(Mat & points, int & clusterCount, Mat & center, vect
         dists.push_back(dist);
     }
 
+    // 画出分类好的点
     DrawClassifyPoint(center, clusterGroup, means, clusterCount, name);
     clusterGroup.clear();
 
@@ -258,9 +265,6 @@ void DrawClassifyPoint(Mat & center,  vector<vector<Point> > & clusterGroup, vec
     for (int i = 0; i < center.rows; i++)
     {
         Point ipt = center.at<Point2f>(i);
-        // int size = 2;
-        // int thickness = 1;
-        // Scalar color(255, 255, 255)
         circle(img, ipt, 4, Scalar(255, 255, 255), FILLED, LINE_AA);
     }
 
