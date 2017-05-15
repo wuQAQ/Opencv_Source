@@ -93,6 +93,7 @@ void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
     cout << "eigenvectors: " << endl << maxValue << endl;
     //cout << "result: " << endl << result << endl;
     cout << "result" << endl;
+    
     for (int i = 0; i < result.rows; i++)
     {
         cout << result.at<float>(i, 0) << endl;
