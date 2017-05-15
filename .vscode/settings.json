@@ -17,6 +17,7 @@
         "iomanip": "cpp",
         "system_error": "cpp",
         "type_traits": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "functional": "cpp"
     }
 }
