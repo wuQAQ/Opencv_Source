@@ -6,6 +6,7 @@ using namespace cv;
 // Function declarations
 void drawAxis(Mat&, Point, Point, Scalar, const float);
 double getOrientation(const vector<Point> &, Mat&);
+
 void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale = 0.2)
 {
     double angle;
@@ -26,6 +27,7 @@ void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale = 0.2
     p.y = (int) (q.y + 9 * sin(angle - CV_PI / 4));
     line(img, p, q, colour, 1, CV_AA);
 }
+
 double getOrientation(const vector<Point> &pts, Mat &img)
 {
     //Construct a buffer used by the pca analysis
@@ -59,6 +61,7 @@ double getOrientation(const vector<Point> &pts, Mat &img)
     double angle = atan2(eigen_vecs[0].y, eigen_vecs[0].x); // orientation in radians
     return angle;
 }
+
 int main(int, char** argv)
 {
     // Load image

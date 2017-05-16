@@ -90,14 +90,7 @@ void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
     Mat maxValue = eigenvectors.col(maxLabel);
     cout << "eigenvectors: " << endl << maxValue << endl;
     Mat result = avePoints * maxValue;
-    cout << "eigenvectors: " << endl << maxValue << endl;
-    //cout << "result: " << endl << result << endl;
-    cout << "result" << endl;
-    
-    for (int i = 0; i < result.rows; i++)
-    {
-        cout << result.at<float>(i, 0) << endl;
-    }
+
 }
 
 void MinusAverage(Mat & points, Mat & avePoints, Point2f average)
@@ -154,3 +147,4 @@ void GetCovValue(Mat & avePoints, Mat & res)
     cout << "aa: " << endl;
     //cout << res << endl;
 }
+
