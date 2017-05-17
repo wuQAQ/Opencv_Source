@@ -12,6 +12,7 @@
 using namespace cv;
 using namespace std;
 
+Point2f center;
 Point2f GetAverage(Mat & points);
 void MinusAverage(Mat & points, Mat & avePoints, Point2f average);
 Mat Covariance(Mat & points, Mat & avePoints);
@@ -19,6 +20,7 @@ void GetCovValue(Mat & avePoints, Mat & res);
 void GetEigen(Mat & covVal, Mat & eigenvalues, Mat & eigenvectors);
 void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors);
 
+Mat tempPoints(500, 2, CV_32FC1);
 int main(void)
 {
     Mat points(500, 1, CV_32FC2);
@@ -40,16 +42,26 @@ int main(void)
         record >> point.x;
         record >> point.y;
         points.at<Point2f>(count) = point;
+        tempPoints.at<float>(count, 0) = point.x;
+        tempPoints.at<float>(count, 1) = point.y;
         count++;
     }
 
-    cout << points << endl;
+    //cout << points << endl;
 
     cout << "points.size:" << points.rows << endl;
     
     covVal = Covariance(points, avePoints);
     GetEigen(covVal, eigenvalues, eigenvectors);
     ChangeValue(avePoints, eigenvalues, eigenvectors);
+
+
+    PCA pca_analysis(avePoints, Mat(), CV_PCA_DATA_AS_ROW);
+    Point2f cntr = Point(static_cast<float>(pca_analysis.mean.at<float>(0, 0)),
+                      static_cast<float>(pca_analysis.mean.at<float>(0, 1)));
+    cout << cntr.x << " " << cntr.y << endl;
+    cout << pca_analysis.eigenvectors << endl;
+    cout << pca_analysis.eigenvalues << endl;
 }
 
 // 求全部点的平均值
@@ -67,7 +79,7 @@ Point2f GetAverage(Mat & points)
 
   average.x = mc.at<float>(0,0) / points.rows;
   average.y = mc.at<float>(0,1) / points.rows;
-
+  center = average;
   cout << "(" << average.x << ", " << average.y << ")" << endl;
   return average;
 }
@@ -88,8 +100,44 @@ void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
     }
 
     Mat maxValue = eigenvectors.col(maxLabel);
-    cout << "eigenvectors: " << endl << maxValue << endl;
-    Mat result = avePoints * maxValue;
+    //cout << "eigenvectors: " << endl << maxValue << endl;
+    cout << "eigenvectors: " << eigenvectors << endl;
+    Mat result = eigenvectors.t() * tempPoints;
+
+    cout << "result" << endl;
+    cout << result << endl;
+    cout << "end" << endl;
+    ofstream resultfile("result.txt");
+    if (resultfile.is_open())
+    {
+        for (int i = 0; i < result.rows; i++)
+        {
+            resultfile << result.at<float>(i, 0)*eigenvalues.at<float>(0, 0);
+            resultfile << " ";
+            resultfile << result.at<float>(i, 1)*eigenvalues.at<float>(1, 0);
+            resultfile << endl;
+        }
+    }
+
+    ofstream examplefile("example.txt");
+    if (examplefile.is_open())
+    {
+        float tx, ty;
+        examplefile << center.x << " " << center.y << endl;
+        
+        tx = (eigenvalues.at<float>(0, 0)*eigenvectors.at<float>(0,0));
+        ty = (eigenvalues.at<float>(0, 0)*eigenvectors.at<float>(0,1));
+        tx += center.x;
+        ty += center.y;
+        examplefile << tx << " " << ty << endl;
+
+        tx = (eigenvalues.at<float>(1, 0)*eigenvectors.at<float>(1,0));
+        ty = (eigenvalues.at<float>(1, 0)*eigenvectors.at<float>(1,1));
+        tx -= center.x;
+        ty -= center.y;
+        examplefile << tx << " " << ty << endl;
+        examplefile.close();
+    }
 
 }
 
@@ -111,7 +159,7 @@ void MinusAverage(Mat & points, Mat & avePoints, Point2f average)
     // 矩阵相减
     subtract(temp, om, avePoints);
 
-    cout << avePoints << endl;
+    //cout << avePoints << endl;
 }
 
 Mat Covariance(Mat & points, Mat & avePoints)
@@ -136,15 +184,16 @@ void GetEigen(Mat & covVal, Mat & eigenvalues, Mat & eigenvectors)
     cout << "eigenvalues: " << endl << eigenvalues << endl;
     cout << "eigenvectors: " << endl << eigenvectors << endl;
 }
+
 // 得到协方差矩阵
 void GetCovValue(Mat & avePoints, Mat & res)
 {
-    cout << avePoints.t() << endl;
+    //cout << avePoints.t() << endl;
     cout << "aa: " << endl;
     cout << avePoints.t()*(avePoints) << endl;
     res = avePoints.t()*(avePoints);
     res /= (avePoints.rows - 1);
-    cout << "aa: " << endl;
+    //cout << "aa: " << endl;
     //cout << res << endl;
 }
 
