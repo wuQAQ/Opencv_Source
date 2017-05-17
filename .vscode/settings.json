@@ -18,6 +18,7 @@
         "system_error": "cpp",
         "type_traits": "cpp",
         "sstream": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "dense": "cpp"
     }
 }

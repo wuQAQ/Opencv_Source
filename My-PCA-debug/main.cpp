@@ -55,13 +55,34 @@ int main(void)
     GetEigen(covVal, eigenvalues, eigenvectors);
     ChangeValue(avePoints, eigenvalues, eigenvectors);
 
+    Mat test = eigenvectors * covVal * eigenvectors.t();
+    cout << "test: " << endl;
+    cout << test << endl;
 
-    PCA pca_analysis(avePoints, Mat(), CV_PCA_DATA_AS_ROW);
+    PCA pca_analysis(tempPoints, Mat(), CV_PCA_DATA_AS_ROW);
     Point2f cntr = Point(static_cast<float>(pca_analysis.mean.at<float>(0, 0)),
                       static_cast<float>(pca_analysis.mean.at<float>(0, 1)));
     cout << cntr.x << " " << cntr.y << endl;
     cout << pca_analysis.eigenvectors << endl;
     cout << pca_analysis.eigenvalues << endl;
+
+    Mat result;
+    gemm( tempPoints, pca_analysis.eigenvectors, 1, Mat(), 0, result, GEMM_2_T );
+    
+    cout << "result" << endl;
+    //cout << result << endl;
+    cout << "end" << endl;
+    ofstream resultfile("result1.txt");
+    if (resultfile.is_open())
+    {
+        for (int i = 0; i < result.rows; i++)
+        {
+            resultfile << result.at<float>(i, 0);
+            resultfile << " ";
+            resultfile << result.at<float>(i, 1);
+            resultfile << endl;
+        }
+    }
 }
 
 // 求全部点的平均值
@@ -99,22 +120,23 @@ void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
         }
     }
 
-    Mat maxValue = eigenvectors.col(maxLabel);
+    Mat maxValue = eigenvectors.row(0);
     //cout << "eigenvectors: " << endl << maxValue << endl;
-    cout << "eigenvectors: " << eigenvectors << endl;
-    Mat result = eigenvectors.t() * tempPoints;
-
+    cout << "eigenvectors: " << endl << eigenvectors << endl;
+    cout << "eigenvectors.t: " << endl << eigenvectors.t() << endl;
+    Mat result;
+    gemm( avePoints, eigenvectors, 1, Mat(), 0, result, GEMM_2_T );
     cout << "result" << endl;
-    cout << result << endl;
+    //cout << result << endl;
     cout << "end" << endl;
     ofstream resultfile("result.txt");
     if (resultfile.is_open())
     {
         for (int i = 0; i < result.rows; i++)
         {
-            resultfile << result.at<float>(i, 0)*eigenvalues.at<float>(0, 0);
+            resultfile << result.at<float>(i, 0);
             resultfile << " ";
-            resultfile << result.at<float>(i, 1)*eigenvalues.at<float>(1, 0);
+            resultfile << result.at<float>(i, 1);
             resultfile << endl;
         }
     }
