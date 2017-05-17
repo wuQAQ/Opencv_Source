@@ -29,6 +29,7 @@ int ShowPlot(const char * name);
 Eigen::Matrix2d genCovar(double v0,double v1,double theta);
 void CreatePoint(void);
 
+Mat tempPoints;
 int main(void)
 {
     Mat points(500, 2, CV_32FC1);
@@ -57,7 +58,7 @@ int main(void)
         points.at<float>(count, 1) = tmpy;
         count++;
     }
-    
+    tempPoints = points;
     // 计算协方差矩阵
     covVal = Covariance(points, avePoints);
     
@@ -106,8 +107,10 @@ void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
 
     Mat maxValue = eigenvectors.col(maxLabel);
 
+    // cout << "maxValue: " << endl;
+    // cout << maxValue << endl;
     Mat result;
-    gemm( avePoints, eigenvectors, 1, Mat(), 0, result, GEMM_2_T );
+    gemm(avePoints, eigenvectors, 1, Mat(), 0, result, GEMM_2_T );
 
     ofstream resultfile("result.txt");
     if (resultfile.is_open())
@@ -172,6 +175,7 @@ Mat Covariance(Mat & points, Mat & avePoints)
     return covRes;
 }
 
+// 获取特征值与特征向量
 void GetEigen(Mat & covVal, Mat & eigenvalues, Mat & eigenvectors)
 {
     eigen(covVal, eigenvalues, eigenvectors);
@@ -184,6 +188,7 @@ void GetCovValue(Mat & avePoints, Mat & res)
     res /= (avePoints.rows - 1);
 }
 
+// 生成随机点
 void CreatePoint(void)
 {
     Eigen::Vector2d mean;

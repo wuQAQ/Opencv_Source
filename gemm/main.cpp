@@ -8,14 +8,14 @@ using namespace cv;
 
 int main()
 {
-	float va[3][3] = 
+	float va[3][1] = 
 	{    
-		{1,0,0},
-		{0,2,0},
-		{0,0,3}
+		{1},
+		{0},
+		{0}
 	};
 
-	Mat a(3, 3, CV_32FC1, va);
+	Mat a(3, 1, CV_32FC1, va);
 	Mat b = Mat::ones(3, 3, CV_32FC1);
 
 	Mat c;
