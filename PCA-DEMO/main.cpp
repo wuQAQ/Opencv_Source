@@ -4,17 +4,24 @@
 #include "eigenmvn.h"
 #include <random>
 #include <fstream>
+#include <cstdio> 
+#include <vector>
 
 using namespace std;
 using namespace cv;
 
 void CreatePoint();
 
+Eigen::Matrix2d genCovar(double v0,double v1,double theta);
+int ShowPlot(const char * name);
+
 int main(int, char** argv)
 {
     Mat points(500, 2, CV_32FC1);
     int count = 0;
     string line;
+
+    CreatePoint();
 
     ifstream input("samples_solver.txt");
 
@@ -50,7 +57,11 @@ int main(int, char** argv)
     ofstream examplefile("example.txt");
     if (examplefile.is_open())
     {
-        examplefile << dst << endl;
+        for (int i = 0; i < dst.rows; i++)
+        {
+            examplefile << dst.at<float>(i, 0) << " " 
+                        << dst.at<float>(i, 1) << endl;
+        }
         examplefile.close();
     }
 
@@ -73,37 +84,47 @@ int main(int, char** argv)
         centerfile.close();
     }
 
+    ShowPlot("plot 'center.txt' w linespoints, 'samples_solver.txt'\n");
+    ShowPlot("plot 'center.txt' w linespoints, 'samples_solver.txt','example.txt' \n");
+
     return 0;
 }
 
 
 void CreatePoint()
 {
-  Eigen::Vector2d mean;
-  Eigen::Matrix2d covar;
-  mean << -1,0.5; // Set the mean
-  // Create a covariance matrix
-  // Much wider than it is tall
-  // and rotated clockwise by a bit
-  covar = genCovar(3,0.1,M_PI/5.0);
+    Eigen::Vector2d mean;
+    Eigen::Matrix2d covar;
 
-  // Create a bivariate gaussian distribution of doubles.
-  // with our chosen mean and covariance
-  const int dim = 2;
-  Eigen::EigenMultivariateNormal<double> normX_solver(mean,covar);
-  std::ofstream file_solver("samples_solver.txt");
+    mean << -1,0.5; // Set the mean
 
-  // Generate some samples and write them out to file
-  // for plotting
-  file_solver << normX_solver.samples(500).transpose() << std::endl;
+    covar = genCovar(3,0.1,M_PI/5.0);
 
-  // same for Cholesky decomposition.
-  covar = genCovar(3,0.1,M_PI/5.0);
-  Eigen::EigenMultivariateNormal<double> normX_cholesk(mean,covar,true);
-  std::ofstream file_cholesky("samples_cholesky.txt");
-  file_cholesky << normX_cholesk.samples(500).transpose() << std::endl;
+    Eigen::EigenMultivariateNormal<double> normX_solver(mean,covar);
+    std::ofstream file_solver("samples_solver.txt");
 
-  file_solver.close();
-  file_cholesky.close();
+    file_solver << normX_solver.samples(500).transpose() << std::endl;
 
+    file_solver.close();
+}
+
+Eigen::Matrix2d genCovar(double v0,double v1,double theta)
+{
+  Eigen::Matrix2d rot = Eigen::Rotation2Dd(theta).matrix();
+  return rot*Eigen::DiagonalMatrix<double,2,2>(v0,v1)*rot.transpose();
+}
+
+int ShowPlot(const char * name)
+{
+  FILE *fp = popen("gnuplot", "w");
+  if (fp == NULL) 
+    return -1; 
+
+  cout << name << endl;
+  fputs("set mouse\n", fp); 
+  fputs(name, fp); 
+  fflush(fp); 
+  cin.get(); 
+  pclose(fp); 
+  return 0;
 }

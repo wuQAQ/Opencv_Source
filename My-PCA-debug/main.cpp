@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 
+#include "eigenmvn.h"
 #include <fstream>
 #include "sstream"
 #include "vector"
@@ -11,6 +12,10 @@
 
 using namespace cv;
 using namespace std;
+
+#ifndef M_PI
+#define M_PI REAL(3.1415926535897932384626433832795029)
+#endif
 
 Point2f center;
 Point2f GetAverage(Mat & points);
@@ -20,89 +25,68 @@ void GetCovValue(Mat & avePoints, Mat & res);
 void GetEigen(Mat & covVal, Mat & eigenvalues, Mat & eigenvectors);
 void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors);
 
-Mat tempPoints(500, 2, CV_32FC1);
+int ShowPlot(const char * name);
+Eigen::Matrix2d genCovar(double v0,double v1,double theta);
+void CreatePoint(void);
+
 int main(void)
 {
-    Mat points(500, 1, CV_32FC2);
+    Mat points(500, 2, CV_32FC1);
     Mat avePoints(500, 2, CV_32FC1);
     Mat covVal;
     Mat eigenvalues;//特征值  
     Mat eigenvectors;//特征向量  
-    int count = 0;
-
+    
     string line;
     Point2f temp;
 
-    ifstream input("samples_solver.txt");
+    // 生成随机点
+    CreatePoint();
 
+    // 读取随机点
+    int count = 0;
+    ifstream input("samples_solver.txt");
     while (getline(input, line))
     {
-        Point2f point;
+        float tmpx;
+        float tmpy;
         istringstream record(line);
-        record >> point.x;
-        record >> point.y;
-        points.at<Point2f>(count) = point;
-        tempPoints.at<float>(count, 0) = point.x;
-        tempPoints.at<float>(count, 1) = point.y;
+        record >> tmpx;
+        record >> tmpy;
+        points.at<float>(count, 0) = tmpx;
+        points.at<float>(count, 1) = tmpy;
         count++;
     }
-
-    //cout << points << endl;
-
-    cout << "points.size:" << points.rows << endl;
     
+    // 计算协方差矩阵
     covVal = Covariance(points, avePoints);
+    
+    // 获取特征值与特征向量
     GetEigen(covVal, eigenvalues, eigenvectors);
+    cout << "eigenvalues: " << endl;
+    cout << eigenvalues << endl;
+    cout << "eigenvectors: " << endl;
+    cout << eigenvectors << endl;
+
+    // 降低维度
     ChangeValue(avePoints, eigenvalues, eigenvectors);
 
-    Mat test = eigenvectors * covVal * eigenvectors.t();
-    cout << "test: " << endl;
-    cout << test << endl;
-
-    PCA pca_analysis(tempPoints, Mat(), CV_PCA_DATA_AS_ROW);
-    Point2f cntr = Point(static_cast<float>(pca_analysis.mean.at<float>(0, 0)),
-                      static_cast<float>(pca_analysis.mean.at<float>(0, 1)));
-    cout << cntr.x << " " << cntr.y << endl;
-    cout << pca_analysis.eigenvectors << endl;
-    cout << pca_analysis.eigenvalues << endl;
-
-    Mat result;
-    gemm( tempPoints, pca_analysis.eigenvectors, 1, Mat(), 0, result, GEMM_2_T );
-    
-    cout << "result" << endl;
-    //cout << result << endl;
-    cout << "end" << endl;
-    ofstream resultfile("result1.txt");
-    if (resultfile.is_open())
-    {
-        for (int i = 0; i < result.rows; i++)
-        {
-            resultfile << result.at<float>(i, 0);
-            resultfile << " ";
-            resultfile << result.at<float>(i, 1);
-            resultfile << endl;
-        }
-    }
+    ShowPlot("plot 'example.txt' w linespoints, 'samples_solver.txt','result.txt' \n");
 }
 
 // 求全部点的平均值
 Point2f GetAverage(Mat & points)
 {
-  Point2f average;
-  Point2f sum(0, 0);
+  Point2f mean;
 
   Mat mc(1, 2, CV_32FC1, Scalar(0)); 
 
   reduce(points, mc, 0, CV_REDUCE_SUM);  
 
-  cout << "mc:" << endl;
-  cout << mc << endl;
+  mean.x = mc.at<float>(0,0) / points.rows;
+  mean.y = mc.at<float>(0,1) / points.rows;
 
-  average.x = mc.at<float>(0,0) / points.rows;
-  average.y = mc.at<float>(0,1) / points.rows;
-  center = average;
-  cout << "(" << average.x << ", " << average.y << ")" << endl;
-  return average;
+  return mean;
 }
 
 void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
@@ -120,15 +104,11 @@ void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
         }
     }
 
-    Mat maxValue = eigenvectors.row(0);
-    //cout << "eigenvectors: " << endl << maxValue << endl;
-    cout << "eigenvectors: " << endl << eigenvectors << endl;
-    cout << "eigenvectors.t: " << endl << eigenvectors.t() << endl;
+    Mat maxValue = eigenvectors.col(maxLabel);
+
     Mat result;
     gemm( avePoints, eigenvectors, 1, Mat(), 0, result, GEMM_2_T );
-    cout << "result" << endl;
-    //cout << result << endl;
-    cout << "end" << endl;
+
     ofstream resultfile("result.txt");
     if (resultfile.is_open())
     {
@@ -142,46 +122,35 @@ void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
     }
 
     ofstream examplefile("example.txt");
+    float cx = center.x;
+    float cy = center.y;
     if (examplefile.is_open())
     {
-        float tx, ty;
-        examplefile << center.x << " " << center.y << endl;
-        
-        tx = (eigenvalues.at<float>(0, 0)*eigenvectors.at<float>(0,0));
-        ty = (eigenvalues.at<float>(0, 0)*eigenvectors.at<float>(0,1));
-        tx += center.x;
-        ty += center.y;
-        examplefile << tx << " " << ty << endl;
+        float x, y;
+        x = cx + eigenvectors.at<float>(0, 0);
+        y = cy + eigenvectors.at<float>(0, 1);
+        examplefile << cx << " " << cy << endl;
+        examplefile << x << " " << y << endl;
 
-        tx = (eigenvalues.at<float>(1, 0)*eigenvectors.at<float>(1,0));
-        ty = (eigenvalues.at<float>(1, 0)*eigenvectors.at<float>(1,1));
-        tx -= center.x;
-        ty -= center.y;
-        examplefile << tx << " " << ty << endl;
+        x = cx + 0.5*eigenvectors.at<float>(1, 0);
+        y = cy + 0.5*eigenvectors.at<float>(1, 1);
+        examplefile << cx << " " << cy << endl;
+        examplefile << x << " " << y << endl;
+
         examplefile.close();
     }
 
 }
 
+// 减去平均值
 void MinusAverage(Mat & points, Mat & avePoints, Point2f average)
 {
     Mat om = Mat::ones(500, 2, CV_32FC1);
-    Mat temp(500, 2, CV_32FC1);
     om.col(0) *= average.x;
     om.col(1) *= average.y;
 
-    for (int i = 0; i < om.rows; i++)
-    {
-        Point2f tp;
-        tp = points.at<Point2f>(i);
-        temp.at<float>(i, 0) = tp.x;
-        temp.at<float>(i, 1) = tp.y;
-    }
-
     // 矩阵相减
-    subtract(temp, om, avePoints);
-
-    //cout << avePoints << endl;
+    subtract(points, om, avePoints);
 }
 
 Mat Covariance(Mat & points, Mat & avePoints)
@@ -189,11 +158,15 @@ Mat Covariance(Mat & points, Mat & avePoints)
     Point2f temp;
     Mat covRes(2, 2, CV_32FC1);
 
-    float tempx, tempy;
+    // 计算平均值
     temp = GetAverage(points);
-
+    cout << "mean: " << endl;
+    cout << temp << endl;
+    center = temp;
+    // 减去平均值
     MinusAverage(points, avePoints, temp);
 
+    // 获取协方差
     GetCovValue(avePoints, covRes);
 
     return covRes;
@@ -201,21 +174,49 @@ Mat Covariance(Mat & points, Mat & avePoints)
 
 void GetEigen(Mat & covVal, Mat & eigenvalues, Mat & eigenvectors)
 {
-    cout << "eigen:" << endl;
     eigen(covVal, eigenvalues, eigenvectors);
-    cout << "eigenvalues: " << endl << eigenvalues << endl;
-    cout << "eigenvectors: " << endl << eigenvectors << endl;
 }
 
 // 得到协方差矩阵
 void GetCovValue(Mat & avePoints, Mat & res)
 {
-    //cout << avePoints.t() << endl;
-    cout << "aa: " << endl;
-    cout << avePoints.t()*(avePoints) << endl;
     res = avePoints.t()*(avePoints);
     res /= (avePoints.rows - 1);
-    //cout << "aa: " << endl;
-    //cout << res << endl;
 }
 
+void CreatePoint(void)
+{
+    Eigen::Vector2d mean;
+    Eigen::Matrix2d covar;
+
+    mean << -1,0.5; // Set the mean
+
+    covar = genCovar(3,0.1,M_PI/5.0);
+
+    Eigen::EigenMultivariateNormal<double> normX_solver(mean,covar);
+    std::ofstream file_solver("samples_solver.txt");
+
+    file_solver << normX_solver.samples(500).transpose() << std::endl;
+
+    file_solver.close();
+}
+
+Eigen::Matrix2d genCovar(double v0,double v1,double theta)
+{
+  Eigen::Matrix2d rot = Eigen::Rotation2Dd(theta).matrix();
+  return rot*Eigen::DiagonalMatrix<double,2,2>(v0,v1)*rot.transpose();
+}
+
+int ShowPlot(const char * name)
+{
+  FILE *fp = popen("gnuplot", "w");
+  if (fp == NULL) 
+    return -1; 
+
+  cout << name << endl;
+  fputs(name, fp); 
+  fflush(fp); 
+  cin.get(); 
+  pclose(fp); 
+  return 0;
+}

@@ -19,6 +19,7 @@
         "type_traits": "cpp",
         "sstream": "cpp",
         "functional": "cpp",
-        "dense": "cpp"
+        "dense": "cpp",
+        "core": "cpp"
     }
 }
