@@ -20,6 +20,7 @@
         "sstream": "cpp",
         "functional": "cpp",
         "dense": "cpp",
-        "core": "cpp"
+        "core": "cpp",
+        "cmath": "cpp"
     }
 }

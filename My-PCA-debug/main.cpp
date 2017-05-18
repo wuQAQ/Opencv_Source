@@ -59,6 +59,7 @@ int main(void)
         count++;
     }
     tempPoints = points;
+    
     // 计算协方差矩阵
     covVal = Covariance(points, avePoints);
     
@@ -110,20 +111,10 @@ void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
     // cout << "maxValue: " << endl;
     // cout << maxValue << endl;
     Mat result;
-    gemm(avePoints, eigenvectors, 1, Mat(), 0, result, GEMM_2_T );
+    gemm(avePoints, maxValue.t(), 1, Mat(), 0, result, GEMM_2_T );
 
-    ofstream resultfile("result.txt");
-    if (resultfile.is_open())
-    {
-        for (int i = 0; i < result.rows; i++)
-        {
-            resultfile << result.at<float>(i, 0);
-            resultfile << " ";
-            resultfile << result.at<float>(i, 1);
-            resultfile << endl;
-        }
-    }
-
+    float k = 0.0;
+    float a = 0.0;
     ofstream examplefile("example.txt");
     float cx = center.x;
     float cy = center.y;
@@ -135,6 +126,8 @@ void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
         examplefile << cx << " " << cy << endl;
         examplefile << x << " " << y << endl;
 
+        a = atan2(y-cy, x-cx);
+        
         x = cx + 0.5*eigenvectors.at<float>(1, 0);
         y = cy + 0.5*eigenvectors.at<float>(1, 1);
         examplefile << cx << " " << cy << endl;
@@ -142,6 +135,27 @@ void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
 
         examplefile.close();
     }
+
+    Mat resPoints(500, 2, CV_32FC1);
+    
+    for (int i = 0; i < result.rows; i++)
+    {
+        resPoints.at<float>(i, 0) = cx+result.at<float>(i, 0) * cos(a);
+        resPoints.at<float>(i, 1) = cy + result.at<float>(i, 0) * sin(a);
+    }
+
+    ofstream resultfile("result.txt");
+    if (resultfile.is_open())
+    {
+        for (int i = 0; i < resPoints.rows; i++)
+        {
+            resultfile << resPoints.at<float>(i, 0);
+            resultfile << " ";
+            resultfile << resPoints.at<float>(i, 1);
+            resultfile << endl;
+        }
+    }
+
 
 }
 
