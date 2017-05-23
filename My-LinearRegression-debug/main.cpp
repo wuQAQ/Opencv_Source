@@ -11,19 +11,19 @@ using namespace cv;
 using namespace std;
 
 #define K 2
-#define B 1
+#define B 0
 
 void CreateSamples(Mat & points);
 Mat GetCostValue(Mat & points, float midValue, float step);
-Mat MyGradientDescent(Mat & points, float midValue, float step, float rate);
+double MyGradientDescent(Mat & points, float startValue, float rate);
 
 int main(void)
 {
     Mat points(40, 2, CV_32FC1);
 
     CreateSamples(points);
-    Mat result = GetCostValue(points, 0, 1);
-    Mat gd = MyGradientDescent(points, 0, 1, 1);
+    //Mat result = GetCostValue(points, 0, 1);
+    MyGradientDescent(points, 50, 0.1);
 
     //cout << "result: " << endl << gd << endl;
     return 0;
@@ -38,9 +38,9 @@ Mat GetCostValue(Mat & points, float midValue, float step)
 
     cout << "num: " << num << endl;
     
-    float tempStartValue = midValue - 50 * step;
+    float tempStartValue = midValue - 5 * step;
 
-    //ofstream costfile("costValue.txt");
+    ofstream costfile("costValue.txt");
 
     for (int i = 0; i < 100; i++)
     {
@@ -49,52 +49,47 @@ Mat GetCostValue(Mat & points, float midValue, float step)
         Mat tempMinus = tempGx - gy;
         Mat rT = tempMinus.t() * tempMinus;
         resultCost.at<float>(i, 0) = rT.at<float>(0, 0) / (2 * num);
-        //costfile << i - 50 << " " << resultCost.at<float>(i, 0) << endl;
+        costfile << i - 50 << " " << resultCost.at<float>(i, 0) << endl;
     }
 
-    //costfile.close();
+    costfile.close();
 
     return resultCost;
 }
 
-Mat MyGradientDescent(Mat & points, float startValue, float rate)
+double MyGradientDescent(Mat & points, float startValue, float rate)
 {
     Mat gx = points.col(0);
     Mat gy = points.col(1);
     float num = points.rows;
     
-    Mat resultCost(100, 1, CV_32FC1);
-    Mat resultMinus(100, 1, CV_32FC1);
-    cout << "num: " << num << endl;
-    
-    float tempStartValue = midValue - 50 * step;
+    float local = startValue;
+    float temp = 0;
 
-    //ofstream costfile("costValue.txt");
+    ofstream slopefile("slope.txt");
 
-    for (int i = 0; i < 100; i++)
+    while(1)
     {
-        float tempK = tempStartValue + i*step;
-        Mat tempGx = tempK * gx;
-        Mat tempMinus = tempGx - gy;
+        Mat minus = local * gx - gy;
+        Mat mul = minus.t() * gx;
+        temp = local - (0.1 / num) * mul.at<float>(0, 0);
+        cout << "local: " << local << " ";
+        cout << "temp:" << temp << endl;
+        if (abs(local - temp) < 0.01)
+            break;
+        else
+            local = temp;
 
-        Mat rT = tempMinus.t() * gx;
-        resultCost.at<float>(i, 0) = rT.at<float>(0, 0) / (num);
-
-        Mat rM = tempMinus.t() * tempMinus;
-        resultMinus.at<float>(i, 0) = rM.at<float>(0, 0) / (2 * num);
-
-        //costfile << i - 50 << " " << resultCost.at<float>(i, 0) << endl;
+        float x = 0.0;
+        slopefile << x << " " << x * local << endl;
+        float y = 10;
+        x = y / local;
+        slopefile << x << " " << y << endl;
+        slopefile << endl;
     }
+    slopefile.close();
 
-    float r = resultMinus.at<float>(0, 0);
-    for (int i = 0; i < 100; i++)
-    {
-        r = r - rate * resultCost.at<float>(i, 0);
-        cout << "r: " << r << endl;
-    }
-
-
-    return resultCost;
+    return local;
 }
 
 // 生成y=2x+1的样本点
