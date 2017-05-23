@@ -22,7 +22,7 @@ int main(void)
     Mat points(40, 2, CV_32FC1);
 
     CreateSamples(points);
-    //Mat result = GetCostValue(points, 0, 1);
+    Mat result = GetCostValue(points, 0, 1);
     MyGradientDescent(points, 50, 0.1);
 
     //cout << "result: " << endl << gd << endl;
@@ -38,7 +38,7 @@ Mat GetCostValue(Mat & points, float midValue, float step)
 
     cout << "num: " << num << endl;
     
-    float tempStartValue = midValue - 5 * step;
+    float tempStartValue = midValue - 50 * step;
 
     ofstream costfile("costValue.txt");
 
