@@ -10,55 +10,65 @@
 using namespace cv;
 using namespace std;
 
-#define K 3
-#define B 1
+#define K 4
+#define B 5
 #define KNUM 100
 #define BNUM 100
 
 void CreateSamples(Mat & points);
-void GetCostValue(Mat & points, float midKValue, float midBValue, float step);
+void GetCostValue(Mat & points, float midKValue, float midBValue);
 Mat MyGradientDescent(Mat & points, float startK, float startB, float rate);
+int ShowPlot(const char * name, int mode);
+
+#define PLOTSOURCE "plot 'source.txt', 'sampleline.txt' w l\n"
+#define PLOTCOSTVALUE "splot 'costValue.txt' with lines\n"
+#define PLOTGRADIENT "splot 'costValue.txt' with lines, 'gradientLine.txt' w l\n"
 
 int main(void)
 {
     Mat points(40, 2, CV_32FC1);
 
     CreateSamples(points);
-    GetCostValue(points, 0, 0, 0.1);
-    Mat label = MyGradientDescent(points, 50, 50, 0.1);
+    ShowPlot(PLOTSOURCE, 0);
 
+    GetCostValue(points, 0, 0);
+    ShowPlot(PLOTCOSTVALUE, 1);
+
+    Mat label = MyGradientDescent(points, 49, 49, 0.1);
+    ShowPlot(PLOTGRADIENT, 0);
     cout << "K: " << label.at<float>(1, 0) << " " << "B: " << label.at<float>(0, 0) << endl;
-
+    ShowPlot("plot 'source.txt', 'linear.txt' w l\n", 0);
     return 0;
 }
 
-void GetCostValue(Mat & points, float midKValue, float midBValue, float step)
+void GetCostValue(Mat & points, float midKValue, float midBValue)
 {
     Mat gx = points.col(0);
     Mat gy = points.col(1);
    
     float num = points.rows;
     
-    cout << "num: " << num << endl;
-    
-    float tempStartKValue = midKValue - (KNUM / 2) * step;
-    float tempStartBValue = midBValue - (BNUM / 2) * step;
+    float tempStartKValue = midKValue - (KNUM / 2);
+    float tempStartBValue = midBValue - (BNUM / 2);
 
+    cout << "tempStartKValue: " << tempStartKValue << endl;
+    cout << "tempStartBValue: " << tempStartBValue << endl;
+    
     ofstream costfile("costValue.txt");
 
     for (int i = 0; i < KNUM; i++)
     {
         for (int j = 0; j < BNUM; j++)
         {
-            float tempK = tempStartKValue + i*step;
-            float tempB = tempStartBValue + j*step;
+            float tempK = tempStartKValue + i;
+            float tempB = tempStartBValue + j;
             Mat coe = Mat::ones(40, 1, CV_32FC1);
             coe = tempB * coe;
             Mat tempGx = tempK * gx + coe;
             Mat tempMinus = tempGx - gy;
             Mat rT = tempMinus.t() * tempMinus;
             float temp =  rT.at<float>(0, 0) / (2 * num);
-            costfile << i - (KNUM/2) << " " << j - (BNUM/2) << " " << temp << " i" << endl;
+            costfile << tempK << " " << tempB << " " << temp << " i" << endl;
         }
     }
 
@@ -81,25 +91,40 @@ Mat MyGradientDescent(Mat & points, float startK, float startB, float rate)
     label.at<float>(1, 0) = startB;
 
     float tempcost = 0.0;
+
+    ofstream gdfile("gradientLine.txt");
+    
+    float x = 0.0;
+    float y = 0.0;
     while(1)
     {
         Mat minus = gx * label - gy;
-        Mat mul = minus.t() * gx;
-        //cout << "mul: " << mul << endl;
-        labelTemp = label - (rate / num) * mul.t();
-        cout << "temp: " << endl << labelTemp << endl;
-        //cout << "label: " << endl << label << endl;
-        
         Mat costValue = minus.t() * minus;
         
+        Mat mul = minus.t() * gx;
+        labelTemp = label - (rate / num) * mul.t();
+        
+        // 计算代价函数的值
         float cost = costValue.at<float>(0, 0) / (2 * num);
         cout << cost << endl;
         if (abs(tempcost - cost) < 0.2)
             break;
+        
+        // 写入文件中
+        gdfile << label.at<float>(0, 0) << " " << label.at<float>(0, 1) << " ";
+        gdfile << cost << " i" << endl;
 
         label = labelTemp;
     }
-    
+    gdfile.close();
+
+    ofstream linearfile("linear.txt");
+    linearfile << x << " " << labelTemp.at<float>(1, 0) * x + labelTemp.at<float>(0, 0) << endl;
+    y = 22.0;
+    linearfile << (y-labelTemp.at<float>(0, 0))/labelTemp.at<float>(1, 0) << " " << y << endl << endl; 
+
+    linearfile.close();
+
     return label;
 }
 
@@ -142,4 +167,28 @@ void CreateSamples(Mat & points)
     sourcelinefile << endl;
 
     sourcefile.close();
+}
+
+int ShowPlot(const char * name, int mode)
+{
+    FILE *fp = popen("gnuplot", "w");
+    if (fp == NULL) 
+        return -1; 
+
+    cout << name << endl;
+    if (mode == 1)
+    {
+        fputs("set dgrid3d\n", fp);
+        fputs("set contour base\n", fp);
+        fputs("set cntrparam levels incremental -5,400,4000\n", fp);
+        fputs("set xrange [-50:50]\n", fp);
+        fputs("set yrange [-50:50]\n", fp);
+        fputs("set zrange [-10:14000]\n", fp);
+    } 
+    
+    fputs(name, fp); 
+    fflush(fp); 
+    cin.get();
+    pclose(fp);
+    return 0;
 }

@@ -21,6 +21,9 @@
         "functional": "cpp",
         "dense": "cpp",
         "core": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "*.tcc": "cpp",
+        "istream": "cpp",
+        "tuple": "cpp"
     }
 }
