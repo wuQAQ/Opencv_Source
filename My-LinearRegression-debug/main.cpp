@@ -14,7 +14,8 @@ using namespace std;
 #define B 1
 
 void CreateSamples(Mat & points);
-Mat GetCostValue(Mat & points, double midValue, double step);
+Mat GetCostValue(Mat & points, float midValue, float step);
+Mat MyGradientDescent(Mat & points, float midValue, float step, float rate);
 
 int main(void)
 {
@@ -22,12 +23,13 @@ int main(void)
 
     CreateSamples(points);
     Mat result = GetCostValue(points, 0, 1);
+    Mat gd = MyGradientDescent(points, 0, 1, 1);
 
-    cout << "result: " << endl << result << endl;
+    //cout << "result: " << endl << gd << endl;
     return 0;
 }
 
-Mat GetCostValue(Mat & points, double midValue, double step)
+Mat GetCostValue(Mat & points, float midValue, float step)
 {
     Mat gx = points.col(0);
     Mat gy = points.col(1);
@@ -38,6 +40,8 @@ Mat GetCostValue(Mat & points, double midValue, double step)
     
     float tempStartValue = midValue - 50 * step;
 
+    //ofstream costfile("costValue.txt");
+
     for (int i = 0; i < 100; i++)
     {
         float tempK = tempStartValue + i*step;
@@ -45,7 +49,50 @@ Mat GetCostValue(Mat & points, double midValue, double step)
         Mat tempMinus = tempGx - gy;
         Mat rT = tempMinus.t() * tempMinus;
         resultCost.at<float>(i, 0) = rT.at<float>(0, 0) / (2 * num);
+        //costfile << i - 50 << " " << resultCost.at<float>(i, 0) << endl;
     }
+
+    //costfile.close();
+
+    return resultCost;
+}
+
+Mat MyGradientDescent(Mat & points, float startValue, float rate)
+{
+    Mat gx = points.col(0);
+    Mat gy = points.col(1);
+    float num = points.rows;
+    
+    Mat resultCost(100, 1, CV_32FC1);
+    Mat resultMinus(100, 1, CV_32FC1);
+    cout << "num: " << num << endl;
+    
+    float tempStartValue = midValue - 50 * step;
+
+    //ofstream costfile("costValue.txt");
+
+    for (int i = 0; i < 100; i++)
+    {
+        float tempK = tempStartValue + i*step;
+        Mat tempGx = tempK * gx;
+        Mat tempMinus = tempGx - gy;
+
+        Mat rT = tempMinus.t() * gx;
+        resultCost.at<float>(i, 0) = rT.at<float>(0, 0) / (num);
+
+        Mat rM = tempMinus.t() * tempMinus;
+        resultMinus.at<float>(i, 0) = rM.at<float>(0, 0) / (2 * num);
+
+        //costfile << i - 50 << " " << resultCost.at<float>(i, 0) << endl;
+    }
+
+    float r = resultMinus.at<float>(0, 0);
+    for (int i = 0; i < 100; i++)
+    {
+        r = r - rate * resultCost.at<float>(i, 0);
+        cout << "r: " << r << endl;
+    }
+
 
     return resultCost;
 }
