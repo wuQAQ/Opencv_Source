@@ -10,14 +10,14 @@
 using namespace cv;
 using namespace std;
 
-#define K 2
+#define K 3
 #define B 1
 #define KNUM 100
 #define BNUM 100
 
 void CreateSamples(Mat & points);
 void GetCostValue(Mat & points, float midKValue, float midBValue, float step);
-double MyGradientDescent(Mat & points, float startK, float startB, float rate);
+Mat MyGradientDescent(Mat & points, float startK, float startB, float rate);
 
 int main(void)
 {
@@ -25,8 +25,10 @@ int main(void)
 
     CreateSamples(points);
     GetCostValue(points, 0, 0, 0.1);
-    MyGradientDescent(points, 50, 50, 0.1);
-    //cout << "result: " << endl << gd << endl;
+    Mat label = MyGradientDescent(points, 50, 50, 0.1);
+
+    cout << "K: " << label.at<float>(1, 0) << " " << "B: " << label.at<float>(0, 0) << endl;
+
     return 0;
 }
 
@@ -56,16 +58,14 @@ void GetCostValue(Mat & points, float midKValue, float midBValue, float step)
             Mat tempMinus = tempGx - gy;
             Mat rT = tempMinus.t() * tempMinus;
             float temp =  rT.at<float>(0, 0) / (2 * num);
-            //cout << temp << endl;
             costfile << i - (KNUM/2) << " " << j - (BNUM/2) << " " << temp << " i" << endl;
         }
-        //cout << i << endl;
     }
 
     costfile.close();
 }
 
-double MyGradientDescent(Mat & points, float startK, float startB, float rate)
+Mat MyGradientDescent(Mat & points, float startK, float startB, float rate)
 {
     Mat gx = Mat::ones(points.rows, 2, CV_32FC1);
     Mat gy = points.col(1);
@@ -94,13 +94,13 @@ double MyGradientDescent(Mat & points, float startK, float startB, float rate)
         
         float cost = costValue.at<float>(0, 0) / (2 * num);
         cout << cost << endl;
-        if (abs(tempcost - cost) < 0.15)
+        if (abs(tempcost - cost) < 0.2)
             break;
 
         label = labelTemp;
     }
     
-    return 1.0;
+    return label;
 }
 
 // 生成y=kx+b的样本点
