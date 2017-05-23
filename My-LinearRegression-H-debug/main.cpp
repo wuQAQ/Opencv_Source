@@ -23,6 +23,7 @@ int ShowPlot(const char * name, int mode);
 #define PLOTSOURCE "plot 'source.txt', 'sampleline.txt' w l\n"
 #define PLOTCOSTVALUE "splot 'costValue.txt' with lines\n"
 #define PLOTGRADIENT "splot 'costValue.txt' with lines, 'gradientLine.txt' w l\n"
+#define PLOTLINEAR "plot 'source.txt', 'linear.txt' w l\n"
 
 int main(void)
 {
@@ -37,7 +38,7 @@ int main(void)
     Mat label = MyGradientDescent(points, 49, 49, 0.1);
     ShowPlot(PLOTGRADIENT, 0);
     cout << "K: " << label.at<float>(1, 0) << " " << "B: " << label.at<float>(0, 0) << endl;
-    ShowPlot("plot 'source.txt', 'linear.txt' w l\n", 0);
+    ShowPlot(PLOTLINEAR, 0);
     return 0;
 }
 
