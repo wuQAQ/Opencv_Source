@@ -11,88 +11,99 @@ using namespace cv;
 using namespace std;
 
 #define K 2
-#define B 0
+#define B 1
+#define KNUM 100
+#define BNUM 100
 
 void CreateSamples(Mat & points);
-Mat GetCostValue(Mat & points, float midValue, float step);
-double MyGradientDescent(Mat & points, float startValue, float rate);
+void GetCostValue(Mat & points, float midKValue, float midBValue, float step);
+double MyGradientDescent(Mat & points, float startK, float startB, float rate);
 
 int main(void)
 {
     Mat points(40, 2, CV_32FC1);
 
     CreateSamples(points);
-    Mat result = GetCostValue(points, 0, 1);
-    MyGradientDescent(points, 50, 0.1);
-
+    GetCostValue(points, 0, 0, 0.1);
+    MyGradientDescent(points, 50, 50, 0.1);
     //cout << "result: " << endl << gd << endl;
     return 0;
 }
 
-Mat GetCostValue(Mat & points, float midValue, float step)
+void GetCostValue(Mat & points, float midKValue, float midBValue, float step)
 {
     Mat gx = points.col(0);
     Mat gy = points.col(1);
+   
     float num = points.rows;
-    Mat resultCost(100, 1, CV_32FC1);
-
+    
     cout << "num: " << num << endl;
     
-    float tempStartValue = midValue - 50 * step;
+    float tempStartKValue = midKValue - (KNUM / 2) * step;
+    float tempStartBValue = midBValue - (BNUM / 2) * step;
 
     ofstream costfile("costValue.txt");
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < KNUM; i++)
     {
-        float tempK = tempStartValue + i*step;
-        Mat tempGx = tempK * gx;
-        Mat tempMinus = tempGx - gy;
-        Mat rT = tempMinus.t() * tempMinus;
-        resultCost.at<float>(i, 0) = rT.at<float>(0, 0) / (2 * num);
-        costfile << i - 50 << " " << resultCost.at<float>(i, 0) << endl;
+        for (int j = 0; j < BNUM; j++)
+        {
+            float tempK = tempStartKValue + i*step;
+            float tempB = tempStartBValue + j*step;
+            Mat coe = Mat::ones(40, 1, CV_32FC1);
+            coe = tempB * coe;
+            Mat tempGx = tempK * gx + coe;
+            Mat tempMinus = tempGx - gy;
+            Mat rT = tempMinus.t() * tempMinus;
+            float temp =  rT.at<float>(0, 0) / (2 * num);
+            //cout << temp << endl;
+            costfile << i - (KNUM/2) << " " << j - (BNUM/2) << " " << temp << " i" << endl;
+        }
+        //cout << i << endl;
     }
 
     costfile.close();
-
-    return resultCost;
 }
 
-double MyGradientDescent(Mat & points, float startValue, float rate)
+double MyGradientDescent(Mat & points, float startK, float startB, float rate)
 {
-    Mat gx = points.col(0);
+    Mat gx = Mat::ones(points.rows, 2, CV_32FC1);
     Mat gy = points.col(1);
     float num = points.rows;
-    
-    float local = startValue;
-    float temp = 0;
 
-    ofstream slopefile("slope.txt");
+    Mat temp = gx.col(1);
+    temp = temp.mul(points.col(0));
+    gx.col(1) = temp;
 
+    Mat label(2, 1, CV_32FC1);
+    Mat labelTemp = Mat::zeros(2, 1, CV_32FC1);
+    label.at<float>(0, 0) = startK;
+    label.at<float>(1, 0) = startB;
+
+    float tempcost = 0.0;
     while(1)
     {
-        Mat minus = local * gx - gy;
+        Mat minus = gx * label - gy;
         Mat mul = minus.t() * gx;
-        temp = local - (0.1 / num) * mul.at<float>(0, 0);
-        cout << "local: " << local << " ";
-        cout << "temp:" << temp << endl;
-        if (abs(local - temp) < 0.01)
+        //cout << "mul: " << mul << endl;
+        labelTemp = label - (rate / num) * mul.t();
+        cout << "temp: " << endl << labelTemp << endl;
+        //cout << "label: " << endl << label << endl;
+        
+        Mat costValue = minus.t() * minus;
+        
+        float cost = costValue.at<float>(0, 0) / (2 * num);
+        cout << cost << endl;
+        if (abs(tempcost - cost) < 0.15)
             break;
-        else
-            local = temp;
 
-        float x = 0.0;
-        slopefile << x << " " << x * local << endl;
-        float y = 10;
-        x = y / local;
-        slopefile << x << " " << y << endl;
-        slopefile << endl;
+        label = labelTemp;
     }
-    slopefile.close();
-
-    return local;
+    
+    return 1.0;
 }
 
-// 生成y=2x+1的样本点
+// 生成y=kx+b的样本点
 void CreateSamples(Mat & points)
 {
     default_random_engine e;
