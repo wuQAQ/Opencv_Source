@@ -12,72 +12,60 @@ using namespace std;
 float Sigmoid(float x);
 void CreateSample(Mat & sample);
 Mat MatSigmoid(Mat & temp);
-Mat MyGradientDescent(Mat & points, float startK, float startB, float rate);
+Mat MyGradientDescent(Mat & points, float rate);
+void PointLine(Mat & weights);
 
 int main(void)
 {
-    Mat sample(100, 2, CV_32FC1);
-    Mat groupX(100, 2, CV_32FC1);
+    Mat sample(100, 3, CV_32FC1);
+    Mat groupX(100, 3, CV_32FC1);
 
     CreateSample(sample);
-    //cout << sample << endl;
-    MyGradientDescent(sample, 50, 50, 1);
+    Mat weights = MyGradientDescent(sample, 0.001);
+    PointLine(weights);
     return 0;
 }
 
-Mat MyGradientDescent(Mat & points, float startK, float startB, float rate)
+void PointLine(Mat & weights)
 {
-    Mat gx = Mat::ones(points.rows, 2, CV_32FC1);
-    Mat gy = points.col(1);
-    float num = points.rows;
+    float x1 = 0.0;
+    float x2 = 0.0;
 
-    Mat temp = gx.col(1);
-    temp = temp.mul(points.col(0));
-    gx.col(1) = temp;
+    ofstream result("result.txt");
 
-    Mat sgx = MatSigmoid(gx);
+    x1 = -4.0;
+    x2 = (weights.at<float>(0, 0) + weights.at<float>(0,1) * x1)/(-weights.at<float>(0,2));
+    result << x1 << " " << x2 << endl;
 
-    Mat label(2, 1, CV_32FC1);
-    Mat labelTemp = Mat::zeros(2, 1, CV_32FC1);
-    label.at<float>(0, 0) = startK;
-    label.at<float>(1, 0) = startB;
+    x1 = 4.0;
+    x2 = (weights.at<float>(0, 0) + weights.at<float>(0,1) * x1)/(-weights.at<float>(0,2));
+    result << x1 << " " << x2 << endl;
 
-    float tempcost = 0.0;
+    result.close();
+}
 
-    ofstream gdfile("gradientLine.txt");
+Mat MyGradientDescent(Mat & points, float rate)
+{
+    Mat gx = Mat::zeros(points.rows, 3, CV_32FC1);
+    Mat weights = Mat::ones(3, 1, CV_32FC1);
+    Mat gy = points.col(2);
     
-    float x = 0.0;
-    float y = 0.0;
-
-    for (int i = 0; i < 10000; i++)
+    Mat temp = Mat::ones(points.rows, 1, CV_32FC1);
+    gx.col(0) += temp;
+    gx.col(1) += points.col(0);
+    gx.col(2) += points.col(1);
+    
+    
+    for (int i = 0; i < 500; i++)
     {
-        Mat minus = sgx * label - gy;
-        //Mat costValue = minus.t() * minus;
-        Mat mul = minus.t() * gx;
-        labelTemp = label - (rate / num) * mul.t();
-        
-        // 计算代价函数的值
-        //float cost = costValue.at<float>(0, 0) / (2 * num);
-        //cout << cost << endl;
-        //if (abs(tempcost - cost) < 0.2)
-        //    break;
-        
-        // 写入文件中
-        //gdfile << label.at<float>(0, 0) << " " << label.at<float>(0, 1) << " ";
-        //gdfile << cost << " i" << endl;
-        cout << labelTemp << endl;
-        label = labelTemp;
+        Mat th = gx * weights;
+        Mat h = MatSigmoid(th);
+        Mat error = gy - h;
+        weights = weights + rate * gx.t() * error;
     }
-    //gdfile.close();
-
-    //ofstream linearfile("linear.txt");
-    //linearfile << x << " " << labelTemp.at<float>(1, 0) * x + labelTemp.at<float>(0, 0) << endl;
-    //y = 22.0;
-    //linearfile << (y-labelTemp.at<float>(0, 0))/labelTemp.at<float>(1, 0) << " " << y << endl << endl; 
-
-    //linearfile.close();
-
-    return label;
+    
+    cout << weights << endl;
+    return weights;
 }
 
 Mat MatSigmoid(Mat & temp)
@@ -116,6 +104,7 @@ void CreateSample(Mat & sample)
 
         sample.at<float>(count, 0) = x;
         sample.at<float>(count, 1) = y;
+        sample.at<float>(count, 2) = label;
         count++;
 
         if (label == 0)
