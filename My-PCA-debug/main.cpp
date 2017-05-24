@@ -9,6 +9,7 @@
 #include "sstream"
 #include "vector"
 #include <iostream>
+#include <cmath>
 
 using namespace cv;
 using namespace std;
@@ -140,10 +141,10 @@ void ChangeValue(Mat & avePoints, Mat & eigenvalues, Mat & eigenvectors)
     
     for (int i = 0; i < result.rows; i++)
     {
-        resPoints.at<float>(i, 0) = cx+result.at<float>(i, 0) * cos(a);
-        resPoints.at<float>(i, 1) = cy + result.at<float>(i, 0) * sin(a);
+       resPoints.at<float>(i, 0) = cx+result.at<float>(i, 0) * cos(a); 
+       resPoints.at<float>(i, 1) = cy + result.at<float>(i, 0) * sin(a);
     }
-
+    
     ofstream resultfile("result.txt");
     if (resultfile.is_open())
     {
