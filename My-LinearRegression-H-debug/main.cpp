@@ -37,7 +37,9 @@ int main(void)
 
     Mat label = MyGradientDescent(points, 49, 49, 0.1);
     ShowPlot(PLOTGRADIENT, 0);
-    cout << "K: " << label.at<float>(1, 0) << " " << "B: " << label.at<float>(0, 0) << endl;
+    //cout << "K: " << label.at<float>(1, 0) << " " << "B: " << label.at<float>(0, 0) << endl;
+    cout << endl;
+    cout << label << endl; 
     ShowPlot(PLOTLINEAR, 0);
     return 0;
 }
