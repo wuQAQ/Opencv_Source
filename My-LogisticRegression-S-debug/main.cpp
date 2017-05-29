@@ -14,6 +14,10 @@ void CreateSample(Mat & sample);
 Mat MatSigmoid(Mat & temp);
 Mat MyGradientDescent(Mat & points, float rate);
 void PointLine(Mat & weights);
+int ShowPlot(const char * name, int mode);
+
+#define PLOTSOURCE "plot 'sample1.txt' w p, 'sample2.txt' w p\n"
+#define PLOTRESULT "plot 'sample1.txt' w p, 'sample2.txt' w p, 'result.txt' w l\n"
 
 int main(void)
 {
@@ -21,8 +25,34 @@ int main(void)
     Mat groupX(100, 3, CV_32FC1);
 
     CreateSample(sample);
+    ShowPlot(PLOTSOURCE, 0);
     Mat weights = MyGradientDescent(sample, 0.001);
     PointLine(weights);
+    ShowPlot(PLOTRESULT, 0);
+    return 0;
+}
+
+int ShowPlot(const char * name, int mode)
+{
+    FILE *fp = popen("gnuplot", "w");
+    if (fp == NULL) 
+        return -1; 
+
+    cout << name << endl;
+    if (mode == 1)
+    {
+        fputs("set dgrid3d\n", fp);
+        fputs("set contour base\n", fp);
+        fputs("set cntrparam levels incremental -5,400,4000\n", fp);
+        fputs("set xrange [-50:50]\n", fp);
+        fputs("set yrange [-50:50]\n", fp);
+        fputs("set zrange [-10:14000]\n", fp);
+    } 
+    
+    fputs(name, fp); 
+    fflush(fp); 
+    cin.get();
+    pclose(fp);
     return 0;
 }
 
