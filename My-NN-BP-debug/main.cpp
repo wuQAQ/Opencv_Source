@@ -1,73 +1,46 @@
-#include "opencv2/highgui.hpp"
-#include "opencv2/core.hpp"
-#include "opencv2/imgproc.hpp"
+#include "BPnet.h"
 
-#include <iostream>
-#include <cmath>
-#include <fstream>
-
-using namespace cv;
-using namespace std;
-
-float Sigmoid(float x);
-void CreateSample(Mat & sample);
-Mat MatSigmoid(Mat & temp);
-Mat MyGradientDescent(Mat & points, float rate);
-void PointLine(Mat & weights);
-
-int main(void)
+int main()
 {
-    Mat sample(100, 3, CV_32FC1);
-    Mat groupX(100, 3, CV_32FC1);
+    BpNet testNet;
 
-    CreateSample(sample);
-    Mat weights = MyGradientDescent(sample, 0.001);
-    PointLine(weights);
+    // 学习样本
+    vector<double> samplein[4];
+    vector<double> sampleout[4];
+    samplein[0].push_back(0); samplein[0].push_back(0); sampleout[0].push_back(0); 
+    samplein[1].push_back(0); samplein[1].push_back(1); sampleout[1].push_back(1); 
+    samplein[2].push_back(1); samplein[2].push_back(0); sampleout[2].push_back(1); 
+    samplein[3].push_back(1); samplein[3].push_back(1); sampleout[3].push_back(0); 
+    sample sampleInOut[4];
+    for (int i = 0; i < 4; i++)
+    {
+        sampleInOut[i].in = samplein[i];
+        sampleInOut[i].out = sampleout[i];
+    }
+    vector<sample> sampleGroup(sampleInOut, sampleInOut + 4);
+    testNet.training(sampleGroup, 0.0001);
+    cin.get();
+    // 测试数据
+    vector<double> testin[4];
+    vector<double> testout[4];
+    testin[0].push_back(0.1);   testin[0].push_back(0.2);
+    testin[1].push_back(0.15);  testin[1].push_back(0.9);
+    testin[2].push_back(1.1);   testin[2].push_back(0.01);
+    testin[3].push_back(0.88);  testin[3].push_back(1.03);
+    sample testInOut[4];
+    for (int i = 0; i < 4; i++) testInOut[i].in = testin[i];
+    vector<sample> testGroup(testInOut, testInOut + 4);
+
+    // 预测测试数据，并输出结果
+    testNet.predict(testGroup);
+    for (int i = 0; i < testGroup.size(); i++)
+    {
+        for (int j = 0; j < testGroup[i].in.size(); j++) cout << testGroup[i].in[j] << "\t";
+        cout << "-- prediction :";
+        for (int j = 0; j < testGroup[i].out.size(); j++) cout << testGroup[i].out[j] << "\t";
+        cout << endl;
+    }
+
+    system("pause");
     return 0;
-}
-
-
-Mat MyGradientDescent(Mat & points, float rate)
-{
-    Mat gx = Mat::zeros(points.rows, 3, CV_32FC1);
-    Mat weights = Mat::ones(3, 1, CV_32FC1);
-    Mat gy = points.col(2);
-    
-    Mat temp = Mat::ones(points.rows, 1, CV_32FC1);
-    gx.col(0) += temp;
-    gx.col(1) += points.col(0);
-    gx.col(2) += points.col(1);
-    
-    
-    for (int i = 0; i < 500; i++)
-    {
-        Mat th = gx * weights;
-        Mat h = MatSigmoid(th);
-        Mat error = gy - h;
-        weights = weights + rate * gx.t() * error;
-    }
-    
-    cout << weights << endl;
-    return weights;
-}
-
-Mat MatSigmoid(Mat & temp)
-{
-    Mat result(temp.rows, temp.cols, CV_32FC1);
-
-    for (int i = 0; i < temp.rows; i++)
-    {
-        for (int j = 0; j < temp.cols; j++)
-        {
-            result.at<float>(i, j) = Sigmoid(temp.at<float>(i, j));
-        }
-    }
-
-    return result;
-}
-
-
-float Sigmoid(float x)
-{
-    return (1/(1+exp(-x)));
 }
