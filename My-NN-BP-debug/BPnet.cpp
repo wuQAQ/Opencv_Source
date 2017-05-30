@@ -128,7 +128,7 @@ void BpNet::backPropagationEpoc()
                 for (int k=0; k<outnode; k++){sum += outputLayer[k]->delta * hiddenLayer[i][j]->weight[k];}
                 hiddenLayer[i][j]->delta = sum * (1 - hiddenLayer[i][j]->value) * hiddenLayer[i][j]->value;
             }
-        }
+        } 
         else
         {
             for (int j = 0; j < hidenode; j++)
