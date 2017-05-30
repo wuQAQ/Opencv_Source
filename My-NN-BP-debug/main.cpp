@@ -83,38 +83,6 @@ Mat MatSigmoid(Mat & temp)
     return result;
 }
 
-void CreateSample(Mat & sample)
-{
-    ifstream input("testSet.txt");
-    ofstream sample1("sample1.txt");
-    ofstream sample2("sample2.txt");
-    string line;
-    int count = 0;
-
-    while (getline(input, line))
-    {
-        float x;
-        float y;
-        int label;
-
-        istringstream record(line);
-        record >> x;
-        record >> y;
-        record >> label;
-
-        sample.at<float>(count, 0) = x;
-        sample.at<float>(count, 1) = y;
-        sample.at<float>(count, 2) = label;
-        count++;
-
-        if (label == 0)
-            sample1 << x << " " << y << endl;
-        else if (label == 1)
-            sample2 << x << " " << y << endl;
-    }
-    sample1.close();
-    sample2.close();
-}
 
 float Sigmoid(float x)
 {
