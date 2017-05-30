@@ -26,23 +26,6 @@ int main(void)
     return 0;
 }
 
-void PointLine(Mat & weights)
-{
-    float x1 = 0.0;
-    float x2 = 0.0;
-
-    ofstream result("result.txt");
-
-    x1 = -4.0;
-    x2 = (weights.at<float>(0, 0) + weights.at<float>(0,1) * x1)/(-weights.at<float>(0,2));
-    result << x1 << " " << x2 << endl;
-
-    x1 = 4.0;
-    x2 = (weights.at<float>(0, 0) + weights.at<float>(0,1) * x1)/(-weights.at<float>(0,2));
-    result << x1 << " " << x2 << endl;
-
-    result.close();
-}
 
 Mat MyGradientDescent(Mat & points, float rate)
 {
