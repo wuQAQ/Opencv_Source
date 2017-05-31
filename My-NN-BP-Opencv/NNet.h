@@ -1,20 +1,21 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
-#include <cstdlib>
-#include <ctime>
+#include <stdlib.h>
+#include <time.h>
 
 using namespace std;
 
-#define inputNodeNum    25
-#define hideNodeNum     2
-#define hideLayer       6
-#define outputNodeNum   10
+#define innode 2        //输入结点数
+#define hidenode 6      //隐含结点数
+#define hidelayer 2     //隐含层数
+#define outnode 1       //输出结点数
+#define learningRate 0.9//学习速率，alpha
 
 // --- -1~1 随机数产生器 --- 
 inline double get_11Random()    // -1 ~ 1
 {
-    return (((2.0*(double)rand()/RAND_MAX) - 1)/5);
+    return ((2.0*(double)rand()/RAND_MAX) - 1);
 }
 
 // --- sigmoid 函数 --- 
@@ -24,21 +25,14 @@ inline double sigmoid(double x)
     return ans;
 }
 
-inline double sigmoidDerivatives(double x)
-{
-    double ans = x / (1-x);
-    return ans;
-}
-
 // --- 输入层节点。包含以下分量：--- 
 // 1.value:     固定输入值； 
 // 2.weight:    面对第一层隐含层每个节点都有权值； 
-// 3.wDeltaSum: 面对第一层隐含层每个节点权值的偏导数值累积
+// 3.wDeltaSum: 面对第一层隐含层每个节点权值的delta值累积
 typedef struct inputNode
 {
     double value;
-    vector<double> weight;
-    vector<double> wDeltaSum;
+    vector<double> weight, wDeltaSum;
 }inputNode;
 
 // --- 输出层节点。包含以下数值：--- 
@@ -49,11 +43,7 @@ typedef struct inputNode
 // 5.bDeltaSum: bias的delta值的累积，每个节点一个
 typedef struct outputNode   // 输出层节点
 {
-    double value;
-    double delta;
-    double rightout;
-    double bias;
-    double bDeltaSum;
+    double value, delta, rightout, bias, bDeltaSum;
 }outputNode;
 
 // --- 隐含层节点。包含以下数值：--- 
@@ -65,41 +55,33 @@ typedef struct outputNode   // 输出层节点
 // 6.wDeltaSum： weight的delta值的累积，面对下一层（隐含层/输出层）每个节点各自积累
 typedef struct hiddenNode   // 隐含层节点
 {
-    double value;
-    double delta;
-    double bias;
-    double bDeltaSum;
-    vector<double> weight;
-    vector<double> wDeltaSum;
+    double value, delta, bias, bDeltaSum;
+    vector<double> weight, wDeltaSum;
 }hiddenNode;
 
 // --- 单个样本 --- 
 typedef struct sample
 {
-    vector<double> in;
-    vector<double> out;
+    vector<double> in, out;
 }sample;
 
 // --- BP神经网络 --- 
-class NNet
+class BpNet
 {
 public:
-    NNet();
+    BpNet();
     void forwardPropagationEpoc();
     void backPropagationEpoc(); 
 
-    void training (vector<sample> sampleGroup, double threshold);
+    void training ( vector<sample> sampleGroup, double threshold);
     void predict  (vector<sample>& testGroup); 
 
-    void setInput (vector<double> sampleIn);     
-    void setOutput(vector<double> sampleOut);
-    void updateWeight(int sampleNum);    
-
-    //void setSingleSample(sample sampleOut);
+    void setInput ( vector<double> sampleIn);     
+    void setOutput( vector<double> sampleOut);    
 
 public:
     double error;
-    inputNode* inputLayer[inputNodeNum];                      // 输入层（仅一层）
-    outputNode* outputLayer[outputNodeNum];                   // 输出层（仅一层）
-    hiddenNode* hiddenLayer[hideLayer][hideNodeNum];       // 隐含层（可能有多层）
+    inputNode* inputLayer[innode];                      // 输入层（仅一层）
+    outputNode* outputLayer[outnode];                   // 输出层（仅一层）
+    hiddenNode* hiddenLayer[hidelayer][hidenode];       // 隐含层（可能有多层）
 };

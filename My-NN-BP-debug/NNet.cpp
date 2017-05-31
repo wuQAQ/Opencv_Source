@@ -41,7 +41,7 @@ NNet::NNet()
                 for (int k = 0; k < hideNodeNum; k++) 
                 {
                     hiddenLayer[i][j]->weight.push_back(get_11Random());
-                    //hiddenLayer[i][j]->wDeltaSum.push_back(0.f);
+                    hiddenLayer[i][j]->wDeltaSum.push_back(0.f);
                 }
             }
             
@@ -192,37 +192,47 @@ void NNet::training(vector<sample> sampleGroup, double threshold)
     random_shuffle (sampleGroup.begin(), sampleGroup.end());
     while(error > threshold)
     {
-        cout << "training error: " << error << endl;
-        error = 0.f;
-        for (int i = 0; i < inputNodeNum; i++) 
-            inputLayer[i]->wDeltaSum.assign(inputLayer[i]->wDeltaSum.size(), 0.f);
-
-        // 隐藏层初始化权重为0，偏移为0
-        for (int i = 0; i < hideLayer; i++)
+     //for (int times = 0; times < 10; times++)
+     //{
+        for (int group = 0; group < 10; group++)
         {
-            for (int j = 0; j < hideNodeNum; j++) 
+            cout << "training error: " << error << endl;
+            error = 0.f;
+            for (int i = 0; i < inputNodeNum; i++) 
+                inputLayer[i]->wDeltaSum.assign(inputLayer[i]->wDeltaSum.size(), 0.f);
+
+            // 隐藏层初始化权重为0，偏移为0
+            for (int i = 0; i < hideLayer; i++)
             {
-                // cout << "hiddenLayer[i][j]->wDeltaSum.size() " <<hiddenLayer[i][j]->wDeltaSum.size() << endl;
-                hiddenLayer[i][j]->wDeltaSum.assign(hiddenLayer[i][j]->wDeltaSum.size(), 0.f);
-                hiddenLayer[i][j]->bDeltaSum = 0.f;
+                for (int j = 0; j < hideNodeNum; j++) 
+                {
+                    // cout << "hiddenLayer[i][j]->wDeltaSum.size() " <<hiddenLayer[i][j]->wDeltaSum.size() << endl;
+                    hiddenLayer[i][j]->wDeltaSum.assign(hiddenLayer[i][j]->wDeltaSum.size(), 0.f);
+                    hiddenLayer[i][j]->bDeltaSum = 0.f;
+                }
             }
+
+            // 输出初始化权重为0
+            for (int i = 0; i < outputNodeNum; i++) 
+                outputLayer[i]->bDeltaSum = 0.f;
+            
+            for (int iter = 0; iter < 10; iter++)
+            {   
+                int label = iter*10+group;
+                setInput(sampleGroup[label].in);
+                setOutput(sampleGroup[label].out);
+
+                forwardPropagationEpoc();
+                backPropagationEpoc();
+                updateWeight(sampleNum);
+                cout << error << endl;
+            }
+            if(error > threshold)
+                break;
         }
-
-        // 输出初始化权重为0
-        for (int i = 0; i < outputNodeNum; i++) 
-            outputLayer[i]->bDeltaSum = 0.f;
-
-        for (int iter = 0; iter < sampleNum; iter++)
-        {
-            setInput(sampleGroup[iter].in);
-            setOutput(sampleGroup[iter].out);
-
-            forwardPropagationEpoc();
-            backPropagationEpoc();
-        }
-
-        updateWeight(sampleNum);
+        
     }
+
 }
 
 void NNet::predict(vector<sample>& testGroup)

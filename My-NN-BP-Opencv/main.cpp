@@ -1,10 +1,11 @@
 #include "NNet.h"
 #include <fstream>
 #include <sstream>
+#include <ctime>
 
 int main()
 {
-    NNet testNet;
+    BpNet testNet;
 
     ifstream samplefile("sp.txt");
     sample sampleInOut[100];
@@ -37,7 +38,10 @@ int main()
     }
     samplefile.close();
     vector<sample> sampleGroup(sampleInOut, sampleInOut+100);
+    clock_t start_time=clock();
     testNet.training(sampleGroup, 0.01);
+    clock_t end_time=clock();
+    cout<< "Running time is: "<<static_cast<double>(end_time-start_time)/CLOCKS_PER_SEC<<"s"<<endl;//输出运行时间
 
     // // 预测测试数据，并输出结果
     vector<sample> testGroup(sampleInOut+10, sampleInOut+11);
