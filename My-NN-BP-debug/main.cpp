@@ -38,18 +38,6 @@ int main()
     }
     samplefile.close();
 
-    vector<sample> sampleGroup(sampleInOut, sampleInOut + 100);
-    for (int i = 0; i < sampleGroup.size(); i++)
-    {
-        for (int j = 0; j < 25; j++)
-            cout << sampleGroup[i].in.at(j) << " ";
-        cout << endl;
-        for (int j = 0; j < 10; j++)
-            cout << sampleGroup[i].out.at(j) << " ";
-        cout << endl;
-    }
-
-    
     //testNet.training(sampleGroup, 0.01);
     // 测试数据
     // vector<double> testin[4];
