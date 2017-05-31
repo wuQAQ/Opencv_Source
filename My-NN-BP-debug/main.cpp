@@ -1,56 +1,56 @@
 #include "NNet.h"
-#include <opencv2/opencv.hpp>
-
-using namespace cv;
+#include <fstream>
+#include <sstream>
 
 int main()
 {
     NNet testNet;
 
-    vector<Mat> match_mat;
-
-    // 学习样本
-    vector<double> samplein[25];
-    vector<double> sampleout[10];
-    
-    cout << "start" << endl;
-    FileStorage readfs("sample.yml", FileStorage::READ);
-
-    if( readfs.isOpened())
+    ifstream samplefile("sp.txt");
+    sample sampleInOut[100];
+    string line;
+    int sinum = 0;
+    int lineNum = 0;
+    while(getline(samplefile, line))
     {
-        for (int i = 0; i <= 9; i++)
+        istringstream record(line);
+        if (lineNum % 2 == 0)
         {
-            Mat temp;
-            String mat_i = "Mat_" + to_string(i);
-            readfs[mat_i] >> temp;
-            match_mat.push_back(temp.clone());
-        }
-    }
-    readfs.release();
-
-    sample sampleInOut[20];
-    for (int i = 0; i < 10; i++)
-    {
-        Mat temp = match_mat.at(i);
-        for (int j = 0; j < 2; j++)
-        {
-            for (int k = 0; k < 25; k++)
-                 sampleInOut[i*2+j].in.push_back(temp.at<double>(k,j));
-                 //cout << temp.at<double>(k,j);
-            for (int k = 0; k < 10; k++)
+            for (int j = 0; j < 25; j++)
             {
-                if (k == i)
-                    sampleInOut[i*2+j].out.push_back(1);
-                else 
-                    sampleInOut[i*2+j].out.push_back(0);
+                double temp;
+                record >> temp;
+                sampleInOut[sinum].in.push_back(temp);
             }
         }
+        else
+        {
+            for (int j = 0; j < 10; j++)
+            {
+                double temp;
+                record >> temp;
+                sampleInOut[sinum].out.push_back(temp);
+            }
+            sinum++;
+            cout << sinum << endl;
+        }
+        lineNum++;
+    }
+    samplefile.close();
+
+    vector<sample> sampleGroup(sampleInOut, sampleInOut + 100);
+    for (int i = 0; i < sampleGroup.size(); i++)
+    {
+        for (int j = 0; j < 25; j++)
+            cout << sampleGroup[i].in.at(j) << " ";
+        cout << endl;
+        for (int j = 0; j < 10; j++)
+            cout << sampleGroup[i].out.at(j) << " ";
+        cout << endl;
     }
 
-    cout << "train" << endl;
-    vector<sample> sampleGroup(sampleInOut, sampleInOut + 20);
-    testNet.training(sampleGroup, 0.01);
-    cin.get();
+    
+    //testNet.training(sampleGroup, 0.01);
     // 测试数据
     // vector<double> testin[4];
     // vector<double> testout[4];

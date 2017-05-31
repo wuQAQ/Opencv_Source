@@ -7,7 +7,7 @@
 using namespace std;
 
 #define inputNodeNum    25
-#define hideNodeNum     10
+#define hideNodeNum     5
 #define hideLayer       1
 #define outputNodeNum   10
 
@@ -92,7 +92,8 @@ public:
     void predict  (vector<sample>& testGroup); 
 
     void setInput (vector<double> sampleIn);     
-    void setOutput(vector<double> sampleOut);    
+    void setOutput(vector<double> sampleOut);
+    void updateWeight(int sampleNum);    
 
     //void setSingleSample(sample sampleOut);
 
