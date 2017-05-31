@@ -28,43 +28,28 @@ int main()
     }
     readfs.release();
 
+    sample sampleInOut[20];
     for (int i = 0; i < 10; i++)
     {
         Mat temp = match_mat.at(i);
-
-        for (int j = 0; j < 10; j++)
+        for (int j = 0; j < 2; j++)
         {
             for (int k = 0; k < 25; k++)
-            {
-                samplein[k].push_back(temp.at<float>(k, j));
-            } 
-
+                 sampleInOut[i*2+j].in.push_back(temp.at<double>(k,j));
+                 //cout << temp.at<double>(k,j);
             for (int k = 0; k < 10; k++)
             {
                 if (k == i)
-                    sampleout[i].push_back(1);
-                else
-                    sampleout[i].push_back(0);
+                    sampleInOut[i*2+j].out.push_back(1);
+                else 
+                    sampleInOut[i*2+j].out.push_back(0);
             }
         }
     }
 
-    for (int i = 0; i < 10; i++)
-    {
-        for (int j = 0; j < sampleout[i].size(); j++)
-            cout << sampleout[i].at(j);
-        cout << endl;
-    }
-
-    sample sampleInOut[10];
-    for (int i = 0; i < 10; i++)
-    {
-        sampleInOut[i].in = samplein[i];
-        sampleInOut[i].out = sampleout[i];
-    }
     cout << "train" << endl;
-    vector<sample> sampleGroup(sampleInOut, sampleInOut + 10);
-    testNet.training(sampleGroup, 0.0001);
+    vector<sample> sampleGroup(sampleInOut, sampleInOut + 20);
+    testNet.training(sampleGroup, 0.01);
     cin.get();
     // 测试数据
     // vector<double> testin[4];

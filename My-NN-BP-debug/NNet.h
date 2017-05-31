@@ -7,10 +7,9 @@
 using namespace std;
 
 #define inputNodeNum    25
-#define hideNodeNum     7
-#define hideLayer       2
+#define hideNodeNum     10
+#define hideLayer       1
 #define outputNodeNum   10
-//#define learningRate (0.9)
 
 // --- -1~1 随机数产生器 --- 
 inline double get_11Random()    // -1 ~ 1
@@ -25,7 +24,7 @@ inline double sigmoid(double x)
     return ans;
 }
 
-inline double sigmoidDelta(double x)
+inline double sigmoidDerivatives(double x)
 {
     double ans = x / (1-x);
     return ans;
@@ -50,7 +49,11 @@ typedef struct inputNode
 // 5.bDeltaSum: bias的delta值的累积，每个节点一个
 typedef struct outputNode   // 输出层节点
 {
-    double value, delta, rightout, bias, bDeltaSum;
+    double value;
+    double delta;
+    double rightout;
+    double bias;
+    double bDeltaSum;
 }outputNode;
 
 // --- 隐含层节点。包含以下数值：--- 
@@ -62,14 +65,19 @@ typedef struct outputNode   // 输出层节点
 // 6.wDeltaSum： weight的delta值的累积，面对下一层（隐含层/输出层）每个节点各自积累
 typedef struct hiddenNode   // 隐含层节点
 {
-    double value, delta, bias, bDeltaSum;
-    vector<double> weight, wDeltaSum;
+    double value;
+    double delta;
+    double bias;
+    double bDeltaSum;
+    vector<double> weight;
+    vector<double> wDeltaSum;
 }hiddenNode;
 
 // --- 单个样本 --- 
 typedef struct sample
 {
-    vector<double> in, out;
+    vector<double> in;
+    vector<double> out;
 }sample;
 
 // --- BP神经网络 --- 
@@ -85,6 +93,8 @@ public:
 
     void setInput (vector<double> sampleIn);     
     void setOutput(vector<double> sampleOut);    
+
+    //void setSingleSample(sample sampleOut);
 
 public:
     double error;

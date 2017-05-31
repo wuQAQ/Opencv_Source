@@ -25,11 +25,13 @@ NNet::NNet()
         {
             hiddenLayer[i][j] = new hiddenNode();
             hiddenLayer[i][j]->bias = get_11Random();
+            // 如果是隐藏层的最后一层
             if ((hideLayer - 1) == i)
             {
                 for (int k = 0; k < outputNodeNum; k++) 
                 {
                     hiddenLayer[i][j]->weight.push_back(get_11Random());
+                    hiddenLayer[i][j]->wDeltaSum.push_back(0.f);
                 }
             }
             else
@@ -37,6 +39,7 @@ NNet::NNet()
                 for (int k = 0; k < hideNodeNum; k++) 
                 {
                     hiddenLayer[i][j]->weight.push_back(get_11Random());
+                    //hiddenLayer[i][j]->wDeltaSum.push_back(0.f);
                 }
             }
             
@@ -51,36 +54,27 @@ NNet::NNet()
     }
 }
 
+// 前向传播
 void NNet::forwardPropagationEpoc()
 {
     // forward propagation on hidden layer
     for (int i = 0; i < hideLayer; i++)
     {
-        if (i == 0)
+        for (int j = 0; j < hideNodeNum; j++)
         {
-            for (int j = 0; j < hideNodeNum; j++)
+            double sum = 0.f;
+            if (i == 0)
             {
-                double sum = 0.f;
                 for (int k = 0; k < inputNodeNum; k++) 
-                {
                     sum += inputLayer[k]->value * inputLayer[k]->weight[j];
-                }
-                sum += hiddenLayer[i][j]->bias;
-                hiddenLayer[i][j]->value = sigmoid(sum);
             }
-        }
-        else
-        {
-            for (int j = 0; j < hideNodeNum; j++)
+            else
             {
-                double sum = 0.f;
                 for (int k = 0; k < hideNodeNum; k++) 
-                {
                     sum += hiddenLayer[i-1][k]->value * hiddenLayer[i-1][k]->weight[j];
-                }
-                sum += hiddenLayer[i][j]->bias;
-                hiddenLayer[i][j]->value = sigmoid(sum);
             }
+            sum += hiddenLayer[i][j]->bias;
+            hiddenLayer[i][j]->value = sigmoid(sum);
         }
     }
 
@@ -97,20 +91,26 @@ void NNet::forwardPropagationEpoc()
     }
 }
 
+// 反向传播
 void NNet::backPropagationEpoc()
 {
     // backward propagation on output layer
     // -- compute delta
     for (int i = 0; i < outputNodeNum; i++)
     {
-        // 计算costValue
+        // 计算训练误差值
+        // 公式1
         double tmpe = fabs(outputLayer[i]->value-outputLayer[i]->rightout);
+        if (isnan(tmpe))
+            tmpe = 0.0001;
         error += tmpe * tmpe / 2;
-
-        outputLayer[i]->delta 
-            = (outputLayer[i]->value-outputLayer[i]->rightout)*sigmoidDelta(outputLayer[i]->value);
+        //cout << "error: " << error << endl;
+        // 公式2，3
+        outputLayer[i]->delta = (outputLayer[i]->value-outputLayer[i]->rightout)*sigmoidDerivatives(outputLayer[i]->value);
+        //cout << "outputLayer[i]->delta: " << outputLayer[i]->delta << endl;
     }
 
+    // cout << "hidden layer" << endl;
     // backward propagation on hidden layer
     // -- compute delta
     for (int i = hideLayer - 1; i >= 0; i--)    // 反向计算
@@ -120,99 +120,120 @@ void NNet::backPropagationEpoc()
             double sum = 0.f;
             if ((hideLayer - 1) == i)
             {
+                // 公式4
                 for (int k=0; k<outputNodeNum; k++){sum += outputLayer[k]->delta * hiddenLayer[i][j]->weight[k];}
-                hiddenLayer[i][j]->delta = sum * sigmoidDelta(hiddenLayer[i][j]->value);
+                hiddenLayer[i][j]->delta = sum * sigmoidDerivatives(hiddenLayer[i][j]->value);
             }
             else
             {
+                // 公式4
                 for (int k=0; k<hideNodeNum; k++){sum += hiddenLayer[i + 1][k]->delta * hiddenLayer[i][j]->weight[k];}
-                hiddenLayer[i][j]->delta = sum * sigmoidDelta(hiddenLayer[i][j]->value);
+                hiddenLayer[i][j]->delta = sum * sigmoidDerivatives(hiddenLayer[i][j]->value);
             }
         }
     }
 
+    // cout << "input layer" << endl;
     // backward propagation on input layer
     // -- update weight delta sum
     for (int i = 0; i < inputNodeNum; i++)
     {
         for (int j = 0; j < hideNodeNum; j++)
         {
-            inputLayer[i]->wDeltaSum[j] += inputLayer[i]->value * hiddenLayer[0][j]->delta;
+            inputLayer[i]->wDeltaSum[j] += hiddenLayer[0][j]->delta * inputLayer[i]->value;
         }
     }
 
+    // cout << "backward propagation on hidden layer" << endl;
     // backward propagation on hidden layer
     // -- update weight delta sum & bias delta sum
     for (int i = 0; i < hideLayer; i++)
     {
-        if (i == hideLayer - 1)
+        for (int j = 0; j < hideNodeNum; j++)
         {
-            for (int j = 0; j < hideNodeNum; j++)
+            if ((hideLayer-1) == i)
             {
                 hiddenLayer[i][j]->bDeltaSum += hiddenLayer[i][j]->delta;
                 for (int k = 0; k < outputNodeNum; k++)
                 { hiddenLayer[i][j]->wDeltaSum[k] += hiddenLayer[i][j]->value * outputLayer[k]->delta; }
             }
-        }
-        else
-        {
-            for (int j = 0; j < hideNodeNum; j++)
+            else
             {
                 hiddenLayer[i][j]->bDeltaSum += hiddenLayer[i][j]->delta;
+                // cout << "2hiddenLayer[i][j]->bDeltaSum: " << hiddenLayer[i][j]->bDeltaSum << endl;
                 for (int k = 0; k < hideNodeNum; k++)
-                { hiddenLayer[i][j]->wDeltaSum[k] += hiddenLayer[i][j]->value * hiddenLayer[i+1][k]->delta; }
+                { 
+                    // cout << "K: " << k << endl;
+                    // cout << "hiddenLayer[i][j]->value:" << hiddenLayer[i][j]->value << endl;
+                    // cout << "hiddenLayer[i+1][k]->delta: " << hiddenLayer[i+1][k]->delta << endl;
+                    // cout << "hiddenLayer[i][j]->wDeltaSum[k]: " << hiddenLayer[i][j]->wDeltaSum[k] << endl;
+                    hiddenLayer[i][j]->wDeltaSum[k] += hiddenLayer[i][j]->value * hiddenLayer[i+1][k]->delta; 
+               }
             }
         }
     }
 
+    //cout << "backward propagation on output layer" << endl;
     // backward propagation on output layer
     // -- update bias delta sum
-    for (int i = 0; i < outputNodeNum; i++) outputLayer[i]->bDeltaSum += outputLayer[i]->delta;
+    for (int i = 0; i < outputNodeNum; i++) 
+        outputLayer[i]->bDeltaSum += outputLayer[i]->delta;
 }
 
 
 void NNet::training(vector<sample> sampleGroup, double threshold)
 {
+    // 样本数量
     int sampleNum = sampleGroup.size();
-    error = 100.f;
-    while(error > threshold)
+    cout << "sampleNum: " << sampleNum << endl;
+    for (int iter = 0; iter < sampleNum; iter++)
     {
         cout << "training error: " << error << endl;
         error = 0.f;
         // initialize delta sum
+        // 输入层初始化权重为0
+        // cout << "Init" << endl;
         for (int i = 0; i < inputNodeNum; i++) 
             inputLayer[i]->wDeltaSum.assign(inputLayer[i]->wDeltaSum.size(), 0.f);
-
+        
+        // cout << "Init2" << endl;
+        // 隐藏层初始化权重为0，偏移为0
         for (int i = 0; i < hideLayer; i++){
-            for (int j = 0; j < inputNodeNum; j++) 
+            for (int j = 0; j < hideNodeNum; j++) 
             {
+                // cout << "hiddenLayer[i][j]->wDeltaSum.size() " <<hiddenLayer[i][j]->wDeltaSum.size() << endl;
                 hiddenLayer[i][j]->wDeltaSum.assign(hiddenLayer[i][j]->wDeltaSum.size(), 0.f);
                 hiddenLayer[i][j]->bDeltaSum = 0.f;
             }
         }
 
+        // cout << "Init3" << endl;
+        // 输出初始化权重为0
         for (int i = 0; i < outputNodeNum; i++) 
             outputLayer[i]->bDeltaSum = 0.f;
 
-        for (int iter = 0; iter < sampleNum; iter++)
-        {
+        // cout << "Setting: " << endl;
+        // 设置样本
+        
             setInput(sampleGroup[iter].in);
             setOutput(sampleGroup[iter].out);
 
             forwardPropagationEpoc();
             backPropagationEpoc();
-        }
+      
 
+        cout << "update input" << endl;
         // backward propagation on input layer
         // -- update weight
         for (int i = 0; i < inputNodeNum; i++)
         {
             for (int j = 0; j < hideNodeNum; j++) 
             {
-                inputLayer[i]->weight[j] -= 0.9 * inputLayer[i]->wDeltaSum[j] / sampleNum;
+                inputLayer[i]->weight[j] -= (0.9 * inputLayer[i]->wDeltaSum[j] / sampleNum);
             }
         }
 
+        cout << "update hidden" << endl;
         // backward propagation on hidden layer
         // -- update weight & bias
         for (int i = 0; i < hideLayer; i++)
@@ -222,11 +243,11 @@ void NNet::training(vector<sample> sampleGroup, double threshold)
                 for (int j = 0; j < hideNodeNum; j++)
                 { 
                     // bias
-                    hiddenLayer[i][j]->bias -= 0.9 * hiddenLayer[i][j]->bDeltaSum / sampleNum;
+                    hiddenLayer[i][j]->bias -= (0.9 * hiddenLayer[i][j]->bDeltaSum / sampleNum);
 
                     // weight
                     for (int k = 0; k < outputNodeNum; k++) 
-                    { hiddenLayer[i][j]->weight[k] -= 0.9 * hiddenLayer[i][j]->wDeltaSum[k] / sampleNum; }
+                    { hiddenLayer[i][j]->weight[k] -= (0.9 * hiddenLayer[i][j]->wDeltaSum[k] / sampleNum); }
                 }
             }
             else
@@ -234,19 +255,22 @@ void NNet::training(vector<sample> sampleGroup, double threshold)
                 for (int j = 0; j < hideNodeNum; j++)
                 {
                     // bias
-                    hiddenLayer[i][j]->bias -= 0.9 * hiddenLayer[i][j]->bDeltaSum / sampleNum;
+                    hiddenLayer[i][j]->bias -= (0.9 * hiddenLayer[i][j]->bDeltaSum / sampleNum);
 
                     // weight
                     for (int k = 0; k < hideNodeNum; k++) 
-                    { hiddenLayer[i][j]->weight[k] -= 0.9 * hiddenLayer[i][j]->wDeltaSum[k] / sampleNum; }
+                    { hiddenLayer[i][j]->weight[k] -= (0.9 * hiddenLayer[i][j]->wDeltaSum[k] / sampleNum); }
                 }
             }
         }
 
+        cout << "update output" << endl;
         // backward propagation on output layer
         // -- update bias
         for (int i = 0; i < outputNodeNum; i++)
-        { outputLayer[i]->bias -= 0.9 * outputLayer[i]->bDeltaSum / sampleNum; }
+        { outputLayer[i]->bias -= (0.9 * outputLayer[i]->bDeltaSum / sampleNum); }
+        cout << "update end" << endl;
+        cout << error << endl;
     }
 }
 
@@ -308,11 +332,11 @@ void NNet::predict(vector<sample>& testGroup)
 void NNet::setInput(vector<double> sampleIn)
 {
     for (int i = 0; i < inputNodeNum; i++) 
-        inputLayer[i]->value = sampleIn[i];
+        inputLayer[i]->value = sampleIn.at(i);
 }
 
-void NNet::setOutput( vector<double> sampleOut)
+void NNet::setOutput(vector<double> sampleOut)
 {
     for (int i = 0; i < outputNodeNum; i++) 
-        outputLayer[i]->rightout = sampleOut[i];
+        outputLayer[i]->rightout = sampleOut.at(i);
 }

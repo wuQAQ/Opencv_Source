@@ -182,7 +182,7 @@ void BpNet::backPropagationEpoc()
 void BpNet::training( vector<sample> sampleGroup, double threshold)
 {
     int sampleNum = sampleGroup.size();
-
+    cout << "Num:" << sampleNum << endl;
     while(error > threshold)
     //for (int curTrainingTime = 0; curTrainingTime < trainingTime; curTrainingTime++)
     {
