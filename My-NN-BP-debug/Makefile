@@ -1,14 +1,14 @@
-mCXX ?= g++
+OBJ = main.o NNet.o
 
 CXXFLAGS += -g -std=c++11 -Wall -pedantic
-#CXXFLAGS += -I/usr/include/eigen3
-CXXFLAGS += -c -Wall $(shell pkg-config --cflags opencv)
-LDFLAGS += $(shell pkg-config --libs --static opencv)
 
-all: opencv_example
+SVision : $(OBJ)
+	g++ -o SVision $(OBJ) `pkg-config --libs opencv`  ${CXXFLAGS}
 
-opencv_example: main.o; $(CXX) $< -o $@ $(LDFLAGS)
+$(OBJ) : NNet.h
 
-%.o: %.cpp; $(CXX) $< -o $@ $(CXXFLAGS)
-
-clean: ; rm -f main.o opencv_example
+.PHONY : cleanall cleanobj
+cleanall:
+	rm SVision $(OBJ)
+cleanobj:
+	rm *.o

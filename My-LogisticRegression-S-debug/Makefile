@@ -7,7 +7,7 @@ LDFLAGS += $(shell pkg-config --libs --static opencv)
 
 all: opencv_example
 
-opencv_example: main.o; $(CXX) $< -o $@ $(LDFLAGS)
+opencv_example:	main.o; $(CXX) $< -o $@ $(LDFLAGS)
 
 %.o: %.cpp; $(CXX) $< -o $@ $(CXXFLAGS)
 
