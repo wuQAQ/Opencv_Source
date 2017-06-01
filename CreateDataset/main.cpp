@@ -7,6 +7,15 @@
 #include <cstdlib>
 #include <fstream>
 
+#include <string>
+
+#include <iostream>  
+#include <stdio.h>  
+#include <unistd.h>  
+#include <dirent.h>  
+#include <stdlib.h>  
+#include <sys/stat.h>   
+
 using namespace std;
 using namespace cv;
 
@@ -21,8 +30,57 @@ int ReverseInt (int i)
     return((int)ch1<<24)+((int)ch2<<16)+((int)ch3<<8)+ch4;
 }
 
+vector<dirent> showAllFiles (const char * dir_name)  
+{  
+    //vector<stirng> filenames;
+    vector<dirent> filenames;
+    if (NULL == dir_name)  
+    {  
+        cout << " dir_name is null ! " << endl;  
+        //return NULL;  
+    }  
+
+    struct stat s;  
+    lstat(dir_name ,&s);  
+    if(!S_ISDIR(s.st_mode))  
+    {  
+        cout << "dir_name is not a valid directory !" << endl;  
+        //return;  
+    }  
+      
+    struct dirent * filename;    // return value for readdir()  
+    DIR * dir;                   // return value for opendir()  
+    dir = opendir(dir_name);  
+    if (NULL == dir)  
+    {  
+        cout << "Can not open dir " << dir_name << endl;  
+        //return;  
+    }  
+    cout << "Successfully opened the dir !" << endl;  
+      
+    /* read all the files in the dir ~ */  
+    while ((filename = readdir(dir)) != NULL)  
+    {  
+        // get rid of "." and ".."  
+        if (strcmp(filename->d_name , ".") == 0 ||   
+            strcmp(filename->d_name , "..") == 0)  
+            continue;  
+        //cout << filename->d_name << endl;
+        filenames.push_back(*filename);
+    }  
+    return filenames;
+}   
+
 int main(void)
 {
+    
+    char dir[] = "samples";
+    vector<dirent> dirs = showAllFiles(dir);
+    for (int i = 0; i < dirs.size(); i++)
+    {
+        cout << dirs.at(i).d_name << endl;
+    }
+   
     // 1. 读取图片
     Mat srcImage = imread("samples/1/3.jpg");
 
