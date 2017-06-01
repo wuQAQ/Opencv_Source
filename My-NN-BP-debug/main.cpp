@@ -37,20 +37,9 @@ int main()
     }
     samplefile.close();
     vector<sample> sampleGroup(sampleInOut, sampleInOut+100);
-    testNet.training(sampleGroup, 0.01);
+    testNet.training(sampleGroup, 0.05);
 
-    // // 预测测试数据，并输出结果
-    vector<sample> testGroup(sampleInOut+10, sampleInOut+11);
-
-    testNet.predict(testGroup);
-    for (int i = 0; i < testGroup.size(); i++)
-    {
-        for (int j = 0; j < testGroup[i].in.size(); j++) cout << testGroup[i].in[j] << " ";
-        cout << "-- prediction :";
-        for (int j = 0; j < testGroup[i].out.size(); j++) cout << testGroup[i].out[j] << " ";
-        cout << endl;
-    }
-
-    //system("pause");
+    testNet.predict(sampleGroup);
+    
     return 0;
 }

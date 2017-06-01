@@ -7,9 +7,10 @@
 using namespace std;
 
 #define inputNodeNum    25
-#define hideNodeNum     2
-#define hideLayer       6
+#define hideNodeNum     6
+#define hideLayer       2
 #define outputNodeNum   10
+#define learningRate 0.9//学习速率，alpha
 
 // --- -1~1 随机数产生器 --- 
 inline double get_11Random()    // -1 ~ 1
@@ -21,12 +22,6 @@ inline double get_11Random()    // -1 ~ 1
 inline double sigmoid(double x)
 {
     double ans = 1 / (1+exp(-x));
-    return ans;
-}
-
-inline double sigmoidDerivatives(double x)
-{
-    double ans = x / (1-x);
     return ans;
 }
 
@@ -89,7 +84,7 @@ public:
     void backPropagationEpoc(); 
 
     void training (vector<sample> sampleGroup, double threshold);
-    void predict  (vector<sample>& testGroup); 
+    double predict  (vector<sample>& testGroup); 
 
     void setInput (vector<double> sampleIn);     
     void setOutput(vector<double> sampleOut);

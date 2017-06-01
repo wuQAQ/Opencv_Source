@@ -300,10 +300,13 @@ void BpNet::training( vector<sample> sampleGroup, double threshold)
 void BpNet::predict(vector<sample>& testGroup)
 {
     int testNum = testGroup.size();
+    double maxValue = 0.f;
+    int label = 0;
+    int rightCount = 0;
 
     for (int iter = 0; iter < testNum; iter++)
     {
-        testGroup[iter].out.clear();
+        //testGroup[iter].out.clear();
         setInput(testGroup[iter].in);
 
         // forward propagation on hidden layer
@@ -347,9 +350,23 @@ void BpNet::predict(vector<sample>& testGroup)
             }
             sum += outputLayer[i]->bias;
             outputLayer[i]->value = sigmoid(sum);
-            testGroup[iter].out.push_back(outputLayer[i]->value);
+            //testGroup[iter].out.push_back(outputLayer[i]->value);
+            if (outputLayer[i]->value > maxValue)
+            {
+                maxValue = outputLayer[i]->value;
+                //cout << "maxValue: " << maxValue << endl;
+                label = i;
+            }
+        }
+
+        if (1.0 == testGroup[iter].out.at(label))
+        {
+            rightCount++;
+            cout << label << endl;
         }
     }
+    cout << "正确: " << rightCount << endl;
+    cout << "正确率: " << (double)rightCount/testNum << endl;
 }
 
 void BpNet::setInput( vector<double> sampleIn)
