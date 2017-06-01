@@ -1,6 +1,7 @@
 CXX ?= g++
 
 CXXFLAGS += -c -Wall $(shell pkg-config --cflags opencv)
+CXXFLAGS += -g -std=c++11 -Wall -pedantic
 LDFLAGS += $(shell pkg-config --libs --static opencv)
 
 all: opencv_example
