@@ -19,9 +19,15 @@
 using namespace std;
 using namespace cv;
 
+#define SAMROWS   10
+#define SAMCOLS   10
+#define NEWSIZE   10
+
 int GetBigOrLitterEndian(void);
 vector<dirent> showAllFiles (const char * dir_name);
 void SaveRoiImage(string sourceName, string saveName);
+void WriteMagicNumber(int magicNumber, int byteorder, vector<uint8_t> & instream);
+void GetSingleImageFeature(string name, vector<uint8_t> & features);
 
 int ReverseInt (int i)
 {
@@ -52,81 +58,156 @@ int main(void)
             SaveRoiImage(tempFileName, tempSaveName);
         }
     }
-    
-
-    // Mat threshold_output;
-    // resize(roi_gray, threshold_output, Size(10, 10), 0, 0, 3); 
-
-    //threshold_output = ~threshold_output/255;
-    //cout << threshold_output.channels() << endl;
-    // for (int i = 0; i < threshold_output.rows; i++)
-    // {
-    //     for (int j = 0; j < threshold_output.cols; j++)
-    //     {
-    //         cout << (int)threshold_output.at<uchar>(i, j);
-    //     }
-    //     cout << endl;
-    // }
 
     // 7.判断主机字节序
     int byteorder = GetBigOrLitterEndian();
     if (0 == byteorder)
     {
         cout << "此程序不适合大端字节数的主机" << endl;
-        return -1;
+        exit(-1);
     }
     
     // 8.制作二进制文件
-    // ofstream infile("samples.idx3-ubyte", ios::binary);
-    // if (infile.is_open())
-    // {
-    //     int magicNumber = 0x0803;
-    //     cout << hex << temp << endl;
-    //     uint8_t test[4];
-    //     for (int i = 0; i < 4; i++)
-    //     {
-    //         uint8_t a = temp;
-    //         temp = temp >> 8;
-    //         test[i] = a;
-    //     }
-    //     for (int i = 3; i >= 0 ; i--)
-    //     {
-    //         infile << test[i];
-    //     }
-    // }
-    // infile.close();
+    ofstream inSample("samples.idx3-ubyte", ios::binary);
+    ofstream inLabel("labels.idx1-ubyte", ios::binary);
+    if (inSample.is_open() && inLabel.is_open())
+    {
+        vector<uint8_t> s_magicStream;
+        vector<uint8_t> l_magicStream;
+        int s_magicNumber = 0x0803;
+        int l_magicNumber = 0x0801;
+        int numberOfImages = 100;
+        int numberOfRows = SAMROWS;
+        int numberOfCols = SAMCOLS;
 
-    // ifstream file ("samples.idx3-ubyte", ios::binary);
-    // if (file.is_open())
-    // {
-    //     int magic_number=0;
-    //     int number_of_images=0;
-    //     int n_rows=0;
-    //     int n_cols=0;
-    //     file.read((char*)&magic_number,sizeof(magic_number));
-    //     cout << "magic_number: " << magic_number << endl;
-    //     magic_number= ReverseInt(magic_number);
-    //     cout << "magic_number: " << magic_number << endl;
+        WriteMagicNumber(s_magicNumber, byteorder, s_magicStream);
+        WriteMagicNumber(numberOfImages, byteorder, s_magicStream);
+        WriteMagicNumber(numberOfRows, byteorder, s_magicStream);
+        WriteMagicNumber(numberOfCols, byteorder, s_magicStream);
+        for (int i = 0; i < (int)s_magicStream.size(); i++)
+        {
+            uint8_t temp;
+            temp = s_magicStream.at(i);
+            inSample << temp;
+        }
 
-    //     file.read((char*)&number_of_images,sizeof(number_of_images));
-    //     cout << "number_of_images: " << number_of_images << endl;
-    //     number_of_images= ReverseInt(number_of_images);
-    //     cout << "number_of_images: " << number_of_images << endl;
+        WriteMagicNumber(l_magicNumber, byteorder, l_magicStream);
+        WriteMagicNumber(numberOfImages, byteorder, l_magicStream);
+        for (int i = 0; i < (int)l_magicStream.size(); i++)
+        {
+            uint8_t temp;
+            temp = l_magicStream.at(i);
+            inLabel << temp;
+        }
+
+        for (int i = 0; i < 10; i++)
+        {
+            uint8_t tempLabel = i;
+            inLabel << tempLabel;
+            for (int j = 0; j < 10; j++)
+            {
+                string filename = saveDir + to_string(i) + "-" + to_string(j) + ".jpg";
+                cout << filename << endl;
+                vector<uint8_t> features;
+                GetSingleImageFeature(filename, features);
+
+                for (int k = 0; k < (int)features.size(); k++)
+                    inSample << features.at(k);
+
+                features.clear();
+                features.shrink_to_fit();
+            }
+        }
+    }
+    inSample.close();
+    inLabel.close();
+
+    ifstream file ("samples.idx3-ubyte", ios::binary);
+    if (file.is_open())
+    {
+        int magic_number=0;
+        int number_of_images=0;
+        int n_rows=0;
+        int n_cols=0;
+        file.read((char*)&magic_number,sizeof(magic_number));
+        magic_number= ReverseInt(magic_number);
+        cout << "magic_number: " << magic_number << endl;
+
+        file.read((char*)&number_of_images,sizeof(number_of_images));
+        number_of_images= ReverseInt(number_of_images);
+        cout << "number_of_images: " << number_of_images << endl;
         
-    //     file.read((char*)&n_rows,sizeof(n_rows));
-    //     cout << "n_rows: " << n_rows << endl;
-    //     n_rows= ReverseInt(n_rows);
-    //     cout << "n_rows: " << n_rows << endl;
+        file.read((char*)&n_rows,sizeof(n_rows));
+        n_rows = ReverseInt(n_rows);
+        cout << "n_rows: " << n_rows << endl;
         
-    //     file.read((char*)&n_cols,sizeof(n_cols));
-    //     cout << "n_cols: " << n_cols << endl;
-    //     n_cols= ReverseInt(n_cols);
-    //     cout << "n_cols: " << n_cols << endl;
-    // }
-    // file.close();
+        file.read((char*)&n_cols,sizeof(n_cols));
+        n_cols = ReverseInt(n_cols);
+        cout << "n_cols: " << n_cols << endl;
+
+        for (int index = 0; index < number_of_images; index++)
+        {
+            
+        }
+    }
+    file.close();
     
     waitKey(0);
     return 0;
+}
+
+void GetSingleImageFeature(string name, vector<uint8_t> & features)
+{
+    // 1. 读取文件
+    Mat srcImage = imread(name);
+
+    // 2. 转换为灰度图
+    Mat srcImage_gray;
+    cvtColor(srcImage, srcImage_gray, CV_BGR2GRAY);
+
+    // 3. 转换为二值图
+    Mat binaryImage;
+    threshold(srcImage_gray, binaryImage, 127, 255, THRESH_BINARY);
+
+    // 4. 缩放
+    Mat newImage;
+    resize(binaryImage, newImage, Size(NEWSIZE, NEWSIZE), 0, 0, 3); 
+
+    // 5. 归一化
+    newImage = ~newImage/255;
+    
+    // 6. 提取
+    for (int i = 0; i < newImage.rows; i++)
+    {
+        for (int j = 0; j < newImage.cols; j++)
+        {
+            cout << (int)newImage.at<uint8_t>(i, j);
+            features.push_back(newImage.at<uint8_t>(i, j));
+        }
+        cout << endl;
+    }
+}
+
+void WriteMagicNumber(int magicNumber, int byteorder, vector<uint8_t> & instream)
+{
+    if (1 == byteorder)
+    {
+        uint8_t test[4];
+        for (int i = 0; i < 4; i++)
+        {
+            uint8_t a = magicNumber;
+            magicNumber = magicNumber >> 8;
+            test[i] = a;
+        }
+        for (int i = 3; i >= 0 ; i--)
+        {
+            instream.push_back(test[i]);
+        }
+    }
+    else if (0 == byteorder)
+    {
+
+    }
 }
 
 void SaveRoiImage(string sourceName, string saveName)
@@ -142,7 +223,15 @@ void SaveRoiImage(string sourceName, string saveName)
     Mat binaryImage;
     threshold(srcImage_gray, binaryImage, 127, 255, THRESH_BINARY);
 
-    // 4. 寻找轮廓
+    // 4. 滤波
+    medianBlur(binaryImage, binaryImage, 5);
+
+    // 5. 腐蚀
+    Mat element = getStructuringElement(MORPH_RECT, Size(20, 20/*15, 15*/));  
+    erode(binaryImage, binaryImage,element);  
+    // imshow("binary", binaryImage);
+
+    // 6. 寻找轮廓
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
     findContours(binaryImage, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
@@ -157,20 +246,18 @@ void SaveRoiImage(string sourceName, string saveName)
         boundRect[i] = boundingRect( Mat(contours_poly[i]) );
     }
 
-    // 5. 绘制轮廓
-    Mat drawing(binaryImage.size(), CV_8UC3, cv::Scalar(255, 255, 255));
-    drawContours( drawing, contours_poly, -1, Scalar(0), 1);
-    rectangle( drawing, boundRect[1].tl(), boundRect[1].br(), Scalar(0), 2, 8, 0 );
-
-    // 6. 根据最小轮廓把原图的字体截取下来
+    // 7. 根据最小轮廓把原图的字体截取下来
     Mat roi;
     srcImage(boundRect[1]).copyTo(roi);
-    // cvtColor(roi, roi_gray, CV_BGR2GRAY);
-    // threshold(roi_gray, roi_gray, 127, 255, THRESH_BINARY);
+    // imshow("roi", roi);
+
+    // 8. 保存
     cout << saveName << endl;
     imwrite(saveName, roi);
 
     srcImage.release();
+    srcImage_gray.release();
+    binaryImage.release();
     roi.release();
 }
 
