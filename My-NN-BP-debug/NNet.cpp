@@ -211,7 +211,7 @@ void NNet::training(vector<sample> sampleGroup, double threshold)
 
         updateWeight(sampleNum);
         times++;
-        if ((times % 1000) == 0)
+        if ((times % 10) == 0)
         {
             result = predict(sampleGroup);
             cout << "训练次数: " << times << endl;
@@ -268,6 +268,9 @@ double NNet::predict(vector<sample>& testGroup)
     double maxValue = 0.f;
     int label = 0;
     int rightCount = 0;
+    vector<int> errorLabel;
+    vector<int> errorIter;
+    vector<int> errorNumber;
 
     cout << "testNum:" << testNum << endl;
     for (int iter = 0; iter < testNum; iter++)
@@ -332,10 +335,37 @@ double NNet::predict(vector<sample>& testGroup)
             rightCount++;
            // cout << "label:" << label << endl;
         }
+        else
+        {
+            for (int i = 0; i < (int)testGroup[iter].out.size(); i++)
+            {
+                if (testGroup[iter].out.at(i) == 1.0)
+                {
+                    errorLabel.push_back(i);
+                }
+            }
+            errorIter.push_back(label);
+            errorNumber.push_back(iter);
+        }
     }
     result = (double)rightCount/testNum;
     //cout << "正确: " << rightCount << endl;
     //cout << "正确率: " << result << endl;
+    cout << "错误的是： " << endl;
+    for (int i = 0; i < (int)errorLabel.size(); i++)
+    {
+        cout << "第" << errorNumber.at(i) << "个样本为：";
+        cout << errorLabel.at(i) << "识别为：";
+        cout << errorIter.at(i) << endl;
+    }
+    cout << endl;
+
+    errorLabel.clear();
+    errorLabel.shrink_to_fit();
+    errorIter.clear();
+    errorIter.shrink_to_fit();
+    errorNumber.clear();
+    errorNumber.shrink_to_fit();
     return result;
 }
 

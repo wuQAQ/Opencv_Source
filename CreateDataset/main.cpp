@@ -19,9 +19,9 @@
 using namespace std;
 using namespace cv;
 
-#define SAMROWS   10
-#define SAMCOLS   10
-#define NEWSIZE   10
+#define SAMROWS   28
+#define SAMCOLS   28
+#define NEWSIZE   28
 
 int GetBigOrLitterEndian(void);
 vector<dirent> showAllFiles (const char * dir_name);
@@ -103,9 +103,10 @@ int main(void)
         for (int i = 0; i < 10; i++)
         {
             uint8_t tempLabel = i;
-            inLabel << tempLabel;
+            
             for (int j = 0; j < 10; j++)
             {
+                inLabel << tempLabel;
                 string filename = saveDir + to_string(i) + "-" + to_string(j) + ".jpg";
                 cout << filename << endl;
                 vector<uint8_t> features;
@@ -123,20 +124,31 @@ int main(void)
     inLabel.close();
 
     ifstream file ("samples.idx3-ubyte", ios::binary);
+    ifstream l_file ("labels.idx1-ubyte", ios::binary);
     if (file.is_open())
     {
         int magic_number=0;
+        int l_magic_number=0;
         int number_of_images=0;
+        int l_number_of_images=0;
         int n_rows=0;
         int n_cols=0;
         file.read((char*)&magic_number,sizeof(magic_number));
         magic_number= ReverseInt(magic_number);
         cout << "magic_number: " << magic_number << endl;
 
+        l_file.read((char*)&l_magic_number,sizeof(l_magic_number));
+        l_magic_number= ReverseInt(l_magic_number);
+        cout << "magic_number: " << l_magic_number << endl;
+
         file.read((char*)&number_of_images,sizeof(number_of_images));
         number_of_images= ReverseInt(number_of_images);
         cout << "number_of_images: " << number_of_images << endl;
         
+        l_file.read((char*)&l_number_of_images,sizeof(l_number_of_images));
+        l_number_of_images= ReverseInt(l_number_of_images);
+        cout << "number_of_images: " << l_number_of_images << endl;
+
         file.read((char*)&n_rows,sizeof(n_rows));
         n_rows = ReverseInt(n_rows);
         cout << "n_rows: " << n_rows << endl;
@@ -147,11 +159,25 @@ int main(void)
 
         for (int index = 0; index < number_of_images; index++)
         {
-            
+            uint8_t temp_label;
+
+            l_file.read((char*)&temp_label, sizeof(temp_label));
+            cout << (int)temp_label << endl;
+            for (int i = 0; i < n_rows; i++)
+            {
+                for (int j = 0; j < n_cols; j++)
+                {
+                    uint8_t temp;
+                    file.read((char*)&temp,sizeof(temp));
+                    cout << (int)temp;
+                }
+                cout << endl;
+            }
         }
     }
     file.close();
-    
+    l_file.close();
+
     waitKey(0);
     return 0;
 }

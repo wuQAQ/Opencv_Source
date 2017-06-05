@@ -6,16 +6,16 @@
 
 using namespace std;
 
-#define inputNodeNum    25
-#define hideNodeNum     6
-#define hideLayer       2
+#define inputNodeNum    782
+#define hideNodeNum     128
+#define hideLayer       1
 #define outputNodeNum   10
 #define learningRate 0.9//学习速率，alpha
 
 // --- -1~1 随机数产生器 --- 
 inline double get_11Random()    // -1 ~ 1
 {
-    return (((2.0*(double)rand()/RAND_MAX) - 1)/5);
+    return ((2.0*(double)rand()/RAND_MAX) - 1);
 }
 
 // --- sigmoid 函数 --- 
