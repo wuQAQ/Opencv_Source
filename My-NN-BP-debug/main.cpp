@@ -13,22 +13,7 @@ int main()
     ReadSample(sampleInOut);
 
     vector<sample> sampleGroup(sampleInOut, sampleInOut+100);
-    // for (int i = 0; i < (int)sampleGroup.size(); i++)
-    // {
-    //     for (int j = 0; j < (int)sampleGroup.at(i).in.size(); j++)
-    //     {
-    //         cout << sampleGroup.at(i).in.at(j);
-    //         if ((j+1)%10 == 0)
-    //             cout << endl;
-    //     }
-
-    //     cout << "out" << endl;
-    //     for (int j = 0; j < (int)sampleGroup.at(i).out.size(); j++)
-    //     {     
-    //         cout << sampleGroup.at(i).out.at(j);
-    //     }
-    //     cout << endl << endl;
-    // }
+    
     testNet.training(sampleGroup, 0.05);
 
     testNet.predict(sampleGroup);
