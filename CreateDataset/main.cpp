@@ -19,9 +19,9 @@
 using namespace std;
 using namespace cv;
 
-#define SAMROWS   28
-#define SAMCOLS   28
-#define NEWSIZE   28
+#define SAMROWS   20
+#define SAMCOLS   20
+#define NEWSIZE   20
 
 int GetBigOrLitterEndian(void);
 vector<dirent> showAllFiles (const char * dir_name);
@@ -45,6 +45,16 @@ int main(void)
     string saveDir = "resultSample/";
     const char *dir = sampleDir.c_str();
     vector<dirent> dirs = showAllFiles(dir);
+    vector<int> randArray;
+    vector<string> imgName;
+    vector<uint8_t> labelName;
+
+    for (int i = 0; i < 100; i++)
+    {
+        randArray.push_back(i);
+    }
+    random_shuffle(randArray.begin(), randArray.end());
+
 
     for (int i = 0; i < (int)dirs.size(); i++)
     {
@@ -106,18 +116,37 @@ int main(void)
             
             for (int j = 0; j < 10; j++)
             {
-                inLabel << tempLabel;
+                //inLabel << tempLabel;
+                labelName.push_back(tempLabel);
+
                 string filename = saveDir + to_string(i) + "-" + to_string(j) + ".jpg";
                 cout << filename << endl;
-                vector<uint8_t> features;
-                GetSingleImageFeature(filename, features);
+                imgName.push_back(filename);
+                // vector<uint8_t> features;
+                // GetSingleImageFeature(filename, features);
 
-                for (int k = 0; k < (int)features.size(); k++)
-                    inSample << features.at(k);
+                // for (int k = 0; k < (int)features.size(); k++)
+                //     inSample << features.at(k);
 
-                features.clear();
-                features.shrink_to_fit();
+                // features.clear();
+                // features.shrink_to_fit();
             }
+        }
+
+        for (int i = 0; i < 100; i++)
+        {
+            int temp = randArray.at(i);
+            inLabel << labelName.at(temp);
+            string filename = imgName.at(temp);
+
+            vector<uint8_t> features;
+            GetSingleImageFeature(filename, features);
+
+            for (int k = 0; k < (int)features.size(); k++)
+                inSample << features.at(k);
+
+            features.clear();
+            features.shrink_to_fit();
         }
     }
     inSample.close();
@@ -289,8 +318,6 @@ void SaveRoiImage(string sourceName, string saveName)
 
 int GetBigOrLitterEndian(void)
 {
-    int result;
-
     union {
         short s;
         char c[sizeof(short)];
