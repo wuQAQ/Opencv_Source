@@ -13,16 +13,18 @@
 using namespace std;
 
 // Testing image file name
-const string testing_image_fn = "mnist/t10k-images.idx3-ubyte";
+//const string testing_image_fn = "samples-dataset/samples_28.idx3-ubyte";
+//const string testing_image_fn = "mnist/t10k-images.idx3-ubyte";
 
 // Testing label file name
-const string testing_label_fn = "mnist/t10k-labels.idx1-ubyte";
+//const string testing_label_fn = "samples-dataset/labels_28.idx1-ubyte";
+//const string testing_label_fn = "mnist/t10k-labels.idx1-ubyte";
 
 // Weights file name
-const string model_fn = "model-neural-network.dat";
+const string model_fn = "output/my.dat";
 
 // Report file name
-const string report_fn = "output/testing-report-28.dat";
+const string report_fn = "output/testing-report-10.dat";
 
 // Number of testing samples
 const int nTesting = 10000;
@@ -81,11 +83,19 @@ void InitNN(void)
         }
     }
 
-    for (int i = 0; i < nl2; i++)
+    for (int layer = 0; layer < nl2; layer++)
     {
-        for (int j = 0; j < n2; j++)
+        int tempNum;
+        if (layer == (nl2-1))
+            tempNum = n3;
+        else 
+            tempNum = n2;
+        
+        for (int i = 0; i < n2; i++)
         {
-            hiddenLayer[i][j] = new hiddenNode();
+            hiddenLayer[layer][i] = new hiddenNode();
+            for (int j = 0; j < tempNum; j++)
+                hiddenLayer[layer][i]->weight.push_back(0.0);
         }
     }
 
@@ -144,7 +154,7 @@ void Perceptron()
 
         for (int i = 0; i < n2; i++)
         {
-            int inValueTemp = hiddenLayer[layer][i]->inValue;
+            double inValueTemp = hiddenLayer[layer][i]->inValue;
             hiddenLayer[layer][i]->outValue = sigmoid(inValueTemp);
         }
     }
@@ -153,13 +163,13 @@ void Perceptron()
     {
         for (int j = 0; j < n3; j++)
         {
-            outputLayer[j]->inValue = hiddenLayer[nl2-1][i]->outValue * hiddenLayer[nl2-1][i]->weight[j];
+            outputLayer[j]->inValue += hiddenLayer[nl2-1][i]->outValue * hiddenLayer[nl2-1][i]->weight[j];
         }
     }
 
     for (int i = 0; i < n3; i++)
     {
-        int inValueTemp = outputLayer[i]->inValue;
+        double inValueTemp = outputLayer[i]->inValue;
         outputLayer[i]->outValue = sigmoid(inValueTemp);
     }
 }
@@ -271,9 +281,9 @@ void LoadModel(string file_name)
 
             for (int j = 0; j < tempNum; j++)
             {
-                double temp;
+                double temp = 0.0;
                 file >> temp;
-                hiddenLayer[layer][i]->weight.push_back(temp);
+                hiddenLayer[layer][i]->weight[j] = temp;
             }
         }
     }
@@ -300,7 +310,6 @@ int main(void)
     LoadModel(model_fn);
 
     int nCorrect = 0;
-
     for (int sample = 0; sample < nTesting; ++sample)
     {
         cout << "Sample " << sample << endl;
@@ -312,8 +321,7 @@ int main(void)
         int predict = 0;
         for (int i = 1; i < n3; ++i)
         {
-            cout << outputLayer[i]->outValue << endl;
-            if (outputLayer[i]->outValue > outputLayer[predict]->expected)
+            if (outputLayer[i]->outValue > outputLayer[predict]->outValue)
             {
                 predict = i;
             } 

@@ -13,27 +13,27 @@
 using namespace std;
 
 // Training image file name
-const string training_image_fn = "samples-dataset/samples_10.idx3-ubyte";
+const string training_image_fn = "mnist/train-images.idx3-ubyte";
 
 // Training label file name
-const string training_label_fn = "samples-dataset/labels_10.idx1-ubyte";
+const string training_label_fn = "mnist/train-labels.idx1-ubyte";
 
 // Weights file name
-const string model_fn = "output/m10.dat";
+const string model_fn = "output/my.dat";
 
 // Report file name
-const string report_fn = "output/my-training-report-10.dat";
+const string report_fn = "output/my-training-report-28.dat";
 
 // Number of training samples
-const int nTraining = 100;
-const int nTrainingTimes = 100;
+const int nTraining = 1000;
+const int nTrainingTimes = 1;
 
 // Image size in MNIST database
-const int width = 10;
-const int height = 10;
+const int width = 28;
+const int height = 28;
 
 const int n1 = width * height; 
-const int n2 = 30;
+const int n2 = 128;
 const int nl2 = 1;
 const int n3 = 10; 
 
@@ -81,13 +81,29 @@ void InitNN(void)
     for (int i = 0; i < n1; i++)
     {
         inputLayer[i] = new inputNode();
-    }
-
-    for (int i = 0; i < nl2; i++)
-    {
         for (int j = 0; j < n2; j++)
         {
-            hiddenLayer[i][j] = new hiddenNode();
+            inputLayer[i]->weight.push_back(0.0);
+            inputLayer[i]->delta.push_back(0.0);
+        }
+    }
+
+    for (int layer = 0; layer < nl2; layer++)
+    {   
+        int tempNum;
+        if (layer == (nl2-1))
+            tempNum = n3;
+        else
+            tempNum = n2;
+        
+        for (int i = 0; i < n2; i++)
+        {
+            hiddenLayer[layer][i] = new hiddenNode();
+            for (int j = 0; j < tempNum; j++)
+            {
+               hiddenLayer[layer][i]->weight.push_back(0.0);
+               hiddenLayer[layer][i]->delta.push_back(0.0);
+            }
         }
     }
 
@@ -106,8 +122,7 @@ void InitNN(void)
             double temp = (double)(rand()%6)/10.0;
             if (sign == 1)
                 temp = -temp;
-            inputLayer[i]->weight.push_back(temp);
-            inputLayer[i]->delta.push_back(0.0);
+            inputLayer[i]->weight[j] = temp;
         }
     }
     
@@ -129,8 +144,7 @@ void InitNN(void)
                 
                 if (sign == 1)
                     temp = -temp;
-                hiddenLayer[layer][i]->weight.push_back(temp);
-                hiddenLayer[layer][i]->delta.push_back(temp);
+                hiddenLayer[layer][i]->weight[j] = temp;
             }
         }
     }
@@ -180,7 +194,7 @@ void Perceptron()
                 for (int j = 0; j < n2; j++)
                 {
                     hiddenLayer[layer][j]->inValue += 
-                        inputLayer[i]->outValue *  inputLayer[i]->weight[j];
+                        hiddenLayer[layer][i]->outValue *  hiddenLayer[layer-1][i]->weight[j];
                 }
             }
         }
@@ -244,9 +258,9 @@ void back_propagation()
     // 隐藏层
     for (int layer = (nl2-1); layer >= 0; layer--)
     {
-        sum = 0.0;
         for (int i = 0; i < n2; i++)
         {   
+            sum = 0.0;
             if (layer == (nl2-1))
             {   
                 //  tempNum = n3;
@@ -260,7 +274,7 @@ void back_propagation()
                 // tempNum = n2;
                 for (int j = 0; j < n2; j++)
                 {
-                    sum += hiddenLayer[layer][i]->weight[j] * outputLayer[i]->theta;
+                    sum += hiddenLayer[layer][i]->weight[j] * hiddenLayer[layer+1][i]->theta;
                 }
             }
 
@@ -319,6 +333,7 @@ void back_propagation()
             double i_deltaTemp = inputLayer[i]->delta[j];
             inputLayer[i]->delta[j] = 
                 (learning_rate * h_thetaTemp * i_outValueTemp) + (momentum * i_deltaTemp);
+            inputLayer[i]->weight[j] += inputLayer[i]->delta[j];
         }
     }
     
@@ -339,7 +354,7 @@ int learning_process()
         for (int i = 0; i < n2; i++)
         {
             int tempNum;
-            if (layer = (nl2 - 1))
+            if (layer == (nl2 - 1))
                 tempNum = n3;
             else
                 tempNum = n2;
@@ -464,7 +479,6 @@ int main(void)
 
             Input();
 
-            //cout << "Input" << endl;
             int nIterations = learning_process();
 
             // Write down the squared error
