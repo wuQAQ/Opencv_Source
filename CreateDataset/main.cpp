@@ -19,25 +19,19 @@
 using namespace std;
 using namespace cv;
 
-#define SAMROWS   20
-#define SAMCOLS   20
-#define NEWSIZE   20
+#define SAMROWS   14
+#define SAMCOLS   14
+#define NEWSIZE   14
+
+const string samples_image_fn = "samples_14.idx3-ubyte";
+const string labels_image_fn = "labels_14.idx1-ubyte";
 
 int GetBigOrLitterEndian(void);
 vector<dirent> showAllFiles (const char * dir_name);
 void SaveRoiImage(string sourceName, string saveName);
 void WriteMagicNumber(int magicNumber, int byteorder, vector<uint8_t> & instream);
 void GetSingleImageFeature(string name, vector<uint8_t> & features);
-
-int ReverseInt (int i)
-{
-    unsigned char ch1, ch2, ch3, ch4;
-    ch1=i&255;
-    ch2=(i>>8)&255;
-    ch3=(i>>16)&255;
-    ch4=(i>>24)&255;
-    return((int)ch1<<24)+((int)ch2<<16)+((int)ch3<<8)+ch4;
-}
+int ReverseInt (int i);
 
 int main(void)
 {
@@ -78,8 +72,8 @@ int main(void)
     }
     
     // 8.制作二进制文件
-    ofstream inSample("samples.idx3-ubyte", ios::binary);
-    ofstream inLabel("labels.idx1-ubyte", ios::binary);
+    ofstream inSample(samples_image_fn, ios::binary);
+    ofstream inLabel(labels_image_fn, ios::binary);
     if (inSample.is_open() && inLabel.is_open())
     {
         vector<uint8_t> s_magicStream;
@@ -116,20 +110,11 @@ int main(void)
             
             for (int j = 0; j < 10; j++)
             {
-                //inLabel << tempLabel;
                 labelName.push_back(tempLabel);
 
                 string filename = saveDir + to_string(i) + "-" + to_string(j) + ".jpg";
                 cout << filename << endl;
                 imgName.push_back(filename);
-                // vector<uint8_t> features;
-                // GetSingleImageFeature(filename, features);
-
-                // for (int k = 0; k < (int)features.size(); k++)
-                //     inSample << features.at(k);
-
-                // features.clear();
-                // features.shrink_to_fit();
             }
         }
 
@@ -152,8 +137,8 @@ int main(void)
     inSample.close();
     inLabel.close();
 
-    ifstream file ("samples.idx3-ubyte", ios::binary);
-    ifstream l_file ("labels.idx1-ubyte", ios::binary);
+    ifstream file (samples_image_fn, ios::binary);
+    ifstream l_file (labels_image_fn, ios::binary);
     if (file.is_open())
     {
         int magic_number=0;
@@ -383,3 +368,13 @@ vector<dirent> showAllFiles (const char * dir_name)
     }  
     return filenames;
 }   
+
+int ReverseInt (int i)
+{
+    unsigned char ch1, ch2, ch3, ch4;
+    ch1=i&255;
+    ch2=(i>>8)&255;
+    ch3=(i>>16)&255;
+    ch4=(i>>24)&255;
+    return((int)ch1<<24)+((int)ch2<<16)+((int)ch3<<8)+ch4;
+}
