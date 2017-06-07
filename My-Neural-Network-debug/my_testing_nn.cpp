@@ -13,33 +13,28 @@
 using namespace std;
 
 // Testing image file name
-const string testing_image_fn = "samples-dataset/samples_10.idx3-ubyte";
+const string testing_image_fn = "mnist/t10k-images.idx3-ubyte";
 
 // Testing label file name
-const string testing_label_fn = "samples-dataset/labels_10.idx1-ubyte";
+const string testing_label_fn = "mnist/t10k-labels.idx1-ubyte";
 
 // Weights file name
-const string model_fn = "output/m15.dat";
+const string model_fn = "model-neural-network.dat";
 
 // Report file name
-const string report_fn = "output/testing-report-15.dat";
+const string report_fn = "output/testing-report-28.dat";
 
 // Number of testing samples
-const int nTesting = 100;
+const int nTesting = 10000;
 
 // Image size in MNIST database
-const int width = 10;
-const int height = 10;
+const int width = 28;
+const int height = 28;
 
 const int n1 = width * height; 
-const int n2 = 30;
+const int n2 = 128;
 const int nl2 = 1;
 const int n3 = 10; 
-
-const int epochs = 512;
-const double learning_rate = 1e-3;
-const double momentum = 0.9;
-const double epsilon = 1e-3;
 
 typedef struct inputNode
 {
@@ -80,6 +75,10 @@ void InitNN(void)
     for (int i = 0; i < n1; i++)
     {
         inputLayer[i] = new inputNode();
+        for(int j = 0; j < n2; j++)
+        {
+            inputLayer[i]->weight.push_back(0.0);
+        }
     }
 
     for (int i = 0; i < nl2; i++)
@@ -93,45 +92,6 @@ void InitNN(void)
     for (int i = 0; i < n3; i++)
     {
         outputLayer[i] = new outputNode();
-    }
-
-    // 2.初始化参数
-    // 输入层->隐藏层的权重
-    for (int i = 0; i < n1; i++)
-    {
-        for (int j = 0; j < n2; j++)
-        {
-            int sign = rand() % 2;
-            double temp = (double)(rand()%6)/10.0;
-            if (sign == 1)
-                temp = -temp;
-            inputLayer[i]->weight.push_back(temp);
-            inputLayer[i]->delta.push_back(0.0);
-        }
-    }
-    
-    //隐藏层->输出层
-    for (int layer = 0; layer < nl2; layer++)
-    {
-        for (int i = 0; i < n2; i++)
-        {
-            int tempNum = 0;
-            if (layer == (nl2 - 1))
-                tempNum = n3;
-            else 
-                tempNum = n2;
-
-            for (int j = 0; j < tempNum; j++)
-            {
-                int sign = rand() % 2;
-                double temp = (double)(rand() % 10 + 1) / (10.0 * n3);
-                
-                if (sign == 1)
-                    temp = -temp;
-                hiddenLayer[layer][i]->weight.push_back(temp);
-                hiddenLayer[layer][i]->delta.push_back(temp);
-            }
-        }
     }
 }
 
@@ -157,56 +117,51 @@ void Perceptron()
         outputLayer[i]->inValue = 0.0;
     }
 
-    // 隐藏层
     for (int layer = 0; layer < nl2; layer++)
     {
         if (layer == 0)
         {
-            // 计算输入
             for (int i = 0; i < n1; i++)
             {
                 for (int j = 0; j < n2; j++)
-                {
+                {   
                     hiddenLayer[layer][j]->inValue += 
-                        inputLayer[i]->outValue *  inputLayer[i]->weight[j];
+                        inputLayer[i]->outValue * inputLayer[i]->weight[j];
                 }
             }
         }
-        else
+        else 
         {
             for (int i = 0; i < n2; i++)
             {
                 for (int j = 0; j < n2; j++)
                 {
-                    hiddenLayer[layer][j]->inValue += 
-                        inputLayer[i]->outValue *  inputLayer[i]->weight[j];
+                    hiddenLayer[layer][j]->inValue +=
+                        hiddenLayer[layer-1][i]->outValue * hiddenLayer[layer-1][i]->weight[j];
                 }
             }
         }
 
-        // 求输出
         for (int i = 0; i < n2; i++)
         {
-            double temp = hiddenLayer[layer][i]->inValue;
-            hiddenLayer[layer][i]->outValue = sigmoid(temp);
+            int inValueTemp = hiddenLayer[layer][i]->inValue;
+            hiddenLayer[layer][i]->outValue = sigmoid(inValueTemp);
         }
     }
 
-    // 输出层
     for (int i = 0; i < n2; i++)
     {
         for (int j = 0; j < n3; j++)
         {
-            outputLayer[j]->inValue += 
-                hiddenLayer[nl2-1][i]->outValue * hiddenLayer[nl2-1][i]->weight[j];
+            outputLayer[j]->inValue = hiddenLayer[nl2-1][i]->outValue * hiddenLayer[nl2-1][i]->weight[j];
         }
     }
 
     for (int i = 0; i < n3; i++)
     {
-        double temp = outputLayer[i]->inValue;
-        outputLayer[i]->outValue = sigmoid(temp);
-    } 
+        int inValueTemp = outputLayer[i]->inValue;
+        outputLayer[i]->outValue = sigmoid(inValueTemp);
+    }
 }
 
 // 输出误差
@@ -225,151 +180,12 @@ double square_error()
     return res;
 }
 
-// Back Propagation Algorithm
-void back_propagation()
-{
-    double sum;
-
-    // 1.计算delta
-    // 输出层
-    for (int i = 0; i < n3; i++)
-    {
-        double outValueTemp = outputLayer[i]->outValue;
-        double expectedTemp = outputLayer[i]->expected;
-        outputLayer[i]->theta = 
-            outValueTemp * (1-outValueTemp) * (expectedTemp - outValueTemp);
-    }
-
-    // 隐藏层
-    for (int layer = (nl2-1); layer >= 0; layer--)
-    {
-        sum = 0.0;
-        for (int i = 0; i < n2; i++)
-        {   
-            if (layer == (nl2-1))
-            {   
-                //  tempNum = n3;
-                for (int j = 0; j < n3; j++)
-                {
-                    sum += hiddenLayer[layer][i]->weight[j] * outputLayer[j]->theta;
-                }
-            }
-            else
-            {
-                // tempNum = n2;
-                for (int j = 0; j < n2; j++)
-                {
-                    sum += hiddenLayer[layer][i]->weight[j] * outputLayer[i]->theta;
-                }
-            }
-
-            //cout << layer << " " << i << "sum: " << sum << endl;
-            double outValueTemp = hiddenLayer[layer][i]->outValue;
-            hiddenLayer[layer][i]->theta = outValueTemp * (1-outValueTemp) * sum;
-        }
-        
-    }
-
-    //cout << "delta hidden" << endl;
-
-    // 2.更新weight
-    // 隐藏层
-    for (int layer = (nl2-1); layer >= 0; layer--)
-    {
-        if (layer == (nl2-1))
-        {
-            for (int i = 0; i < n2; i++)
-            {
-                for (int j = 0; j < n3; j++)
-                {
-                    double thetaTemp = outputLayer[j]->theta;
-                    double h_deltaTemp = hiddenLayer[layer][i]->delta[j];
-                    double h_outValueTemp = hiddenLayer[layer][i]->outValue;
-                    hiddenLayer[layer][i]->delta[j] =
-                         (learning_rate * thetaTemp * h_outValueTemp) + (momentum * h_deltaTemp);
-                    hiddenLayer[layer][i]->weight[j] += hiddenLayer[layer][i]->delta[j];
-                }
-            }
-        }
-        else
-        {
-            for (int i = 0; i < n2; i++)
-            {
-                for (int j = 0; j < n2; j++)
-                {
-                    double thetaTemp = hiddenLayer[layer+1][j]->theta;
-                    double h_deltaTemp = hiddenLayer[layer][i]->delta[j];
-                    double h_outValueTemp = hiddenLayer[layer][i]->outValue;
-                    hiddenLayer[layer][i]->delta[j] =
-                         (learning_rate * thetaTemp * h_outValueTemp) + (momentum * h_deltaTemp);
-                    hiddenLayer[layer][i]->weight[j] += hiddenLayer[layer][i]->delta[j];
-                }
-            }
-        }
-    }
-    
-    // 输入层
-    for (int i = 0; i < n1; i++)
-    {
-        for (int j = 0; j < n2; j++)
-        {
-            double h_thetaTemp = hiddenLayer[0][j]->theta;
-            double i_outValueTemp = inputLayer[i]->outValue;
-            double i_deltaTemp = inputLayer[i]->delta[j];
-            inputLayer[i]->delta[j] = 
-                (learning_rate * h_thetaTemp * i_outValueTemp) + (momentum * i_deltaTemp);
-        }
-    }
-    
-}
-
-int learning_process()
-{
-    for (int i = 0; i < n1; i++)
-    {
-        for (int j = 0; j < n2; j++)
-        {
-            inputLayer[i]->delta[j] = 0.0;
-        }
-    }
-
-    for (int layer = 0; layer < nl2; layer++)
-    {
-        for (int i = 0; i < n2; i++)
-        {
-            int tempNum;
-            if (layer = (nl2 - 1))
-                tempNum = n3;
-            else
-                tempNum = n2;
-            
-            for (int j = 0; j < tempNum; j++)
-            {
-                hiddenLayer[layer][i]->delta[j] = 0.0;
-            }
-        }
-    }
-
-    //cout << "p_init end" << endl;
-    for (int i = 0; i < epochs; i++)
-    {
-        Perceptron();
-        //cout << "Perceptron" << endl;
-        back_propagation();
-        //cout << "back_propagation" << endl;
-        if (square_error() < epsilon) {
-			return i;
-		}
-    }
-    return epochs;
-}
-
 int Input()
 {
     char number;
 
-    for (int j = 0; j < height; ++j) {
-        for (int i = 0; i < width; ++i) {
+    for (int j = 0; j < height; j++) {
+        for (int i = 0; i < width; i++) {
             image.read(&number, sizeof(char));
             if (number == 0) {
 				d[i][j] = 0; 
@@ -377,14 +193,6 @@ int Input()
 				d[i][j] = 1;
 			}
         }
-	}
-
-    cout << "Image:" << endl;
-	for (int j = 0; j < height; ++j) {
-		for (int i = 0; i < width; ++i) {
-			cout << d[i][j];
-		}
-		cout << endl;
 	}
 
     for (int j = 0; j < height; ++j) {
@@ -445,9 +253,9 @@ void LoadModel(string file_name)
     {
         for (int j = 0; j < n2; j++)
         {
-            double temp;
+            double temp = 0.0;
             file >> temp;
-            inputLayer[i]->weight.push_back(temp);
+            inputLayer[i]->weight[j] = temp;
         }
     }
 
@@ -504,8 +312,11 @@ int main(void)
         int predict = 0;
         for (int i = 1; i < n3; ++i)
         {
+            cout << outputLayer[i]->outValue << endl;
             if (outputLayer[i]->outValue > outputLayer[predict]->expected)
+            {
                 predict = i;
+            } 
         }
 
         double error = square_error();
@@ -521,8 +332,8 @@ int main(void)
         {
 			cout << "Classification: NO.  Label = " << label << ". Predict = " << predict << endl;
 			cout << "Image:" << endl;
-			for (int j = 1; j <= height; ++j) {
-				for (int i = 1; i <= width; ++i) {
+			for (int j = 0; j < height; ++j) {
+				for (int i = 0; i < width; ++i) {
 					cout << d[i][j];
 				}
 				cout << endl;
