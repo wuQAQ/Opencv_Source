@@ -32,7 +32,7 @@ void SaveRoiImage(string sourceName, string saveName);
 void WriteMagicNumber(int magicNumber, int byteorder, vector<uint8_t> & instream);
 void GetSingleImageFeature(string name, vector<uint8_t> & features);
 int ReverseInt (int i);
-
+/*
 int main(void)
 {
     string sampleDir = "samples/";
@@ -195,6 +195,14 @@ int main(void)
     waitKey(0);
     return 0;
 }
+*/
+
+int main(void)
+{
+    vector<uint8_t> features;
+    SaveRoiImage("samples/5/1.jpg", "features.jpg");
+    waitKey(0);
+}
 
 void GetSingleImageFeature(string name, vector<uint8_t> & features)
 {
@@ -254,6 +262,7 @@ void SaveRoiImage(string sourceName, string saveName)
 {
     // 1. 读取图片
     Mat srcImage = imread(sourceName);
+    imshow("s", srcImage);
 
     // 2. 转换为灰度图片
     Mat srcImage_gray;
@@ -266,10 +275,10 @@ void SaveRoiImage(string sourceName, string saveName)
     // 4. 滤波
     medianBlur(binaryImage, binaryImage, 5);
 
-    // 5. 腐蚀
+    // 5. 膨胀
     Mat element = getStructuringElement(MORPH_RECT, Size(20, 20/*15, 15*/));  
     erode(binaryImage, binaryImage,element);  
-    // imshow("binary", binaryImage);
+    imshow("binary", binaryImage);
 
     // 6. 寻找轮廓
     vector<vector<Point> > contours;
@@ -289,7 +298,7 @@ void SaveRoiImage(string sourceName, string saveName)
     // 7. 根据最小轮廓把原图的字体截取下来
     Mat roi;
     srcImage(boundRect[1]).copyTo(roi);
-    // imshow("roi", roi);
+    imshow("roi", roi);
 
     // 8. 保存
     cout << saveName << endl;
