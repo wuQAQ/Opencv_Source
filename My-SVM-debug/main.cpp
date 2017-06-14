@@ -60,7 +60,7 @@ clock_t end_time_;
 
 int main()
 {
-    //--------------------- 1. Set up training data ---------------------------------------
+    // 1.读取要训练的数据
     Mat trainData;
     Mat labels;
     trainData = read_mnist_image(trainImage);
@@ -73,7 +73,7 @@ int main()
     {
         cout << trainData.at<float>(0, i) << endl;
     }
-    //------------------------ 2. Set up the support vector machines parameters --------------------
+    // 2.设置参数
     Ptr<SVM> svm = SVM::create();
     svm->setType(SVM::C_SVC);
     svm->setKernel(SVM::RBF);
@@ -85,7 +85,7 @@ int main()
     //svm->setP(0.1);
     svm->setTermCriteria(TermCriteria(CV_TERMCRIT_EPS, 1000, FLT_EPSILON));
 
-    //------------------------ 3. Train the svm ----------------------------------------------------
+    // 3.训练
     cout << "Starting training process" << endl;
     start_time_ = clock();
     svm->train(trainData, ROW_SAMPLE, labels);
@@ -93,18 +93,18 @@ int main()
     cost_time_ = (end_time_ - start_time_) / CLOCKS_PER_SEC;
     cout << "Finished training process...cost " << cost_time_ << " seconds..." << endl;
     
-    //------------------------ 4. save the svm ----------------------------------------------------
+    // 4.存储参数
     svm->save("mnist_dataset/mnist_svm.xml");
     cout << "save as /mnist_dataset/mnist_svm.xml" << endl;
 
     
-    //------------------------ 5. load the svm ----------------------------------------------------
+    // 5.导入SVM参数
     cout << "开始导入SVM文件...\n";
     Ptr<SVM> svm1 = StatModel::load<SVM>("mnist_dataset/mnist_svm.xml");
     cout << "成功导入SVM文件...\n";
 
 
-    //------------------------ 6. read the test dataset -------------------------------------------
+    // 6.读取测试数据
     cout << "开始导入测试数据...\n";
     Mat testData;
     Mat tLabel;
@@ -112,7 +112,7 @@ int main()
     tLabel = read_mnist_label(testLabel);
     cout << "成功导入测试数据！！！\n";
 
-    
+    // 7.预测
     float count = 0;
     for (int i = 0; i < testData.rows; i++) {
         Mat sample = testData.row(i);
