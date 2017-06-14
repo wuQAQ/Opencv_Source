@@ -73,6 +73,7 @@ int main()
     {
         cout << trainData.at<float>(0, i) << endl;
     }
+    
     // 2.设置参数
     Ptr<SVM> svm = SVM::create();
     svm->setType(SVM::C_SVC);
