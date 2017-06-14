@@ -19,12 +19,12 @@
 using namespace std;
 using namespace cv;
 
-#define SAMROWS   14
-#define SAMCOLS   14
-#define NEWSIZE   14
-
-const string samples_image_fn = "samples_14.idx3-ubyte";
-const string labels_image_fn = "labels_14.idx1-ubyte";
+#define SAMROWS   28
+#define SAMCOLS   28
+#define NEWSIZE   28
+#define NUMOFIMG  30
+const string samples_image_fn = "tsvm_samples_28.idx3-ubyte";
+const string labels_image_fn = "tsvm_labels_28.idx1-ubyte";
 
 int GetBigOrLitterEndian(void);
 vector<dirent> showAllFiles (const char * dir_name);
@@ -32,18 +32,18 @@ void SaveRoiImage(string sourceName, string saveName);
 void WriteMagicNumber(int magicNumber, int byteorder, vector<uint8_t> & instream);
 void GetSingleImageFeature(string name, vector<uint8_t> & features);
 int ReverseInt (int i);
-/*
+
 int main(void)
 {
-    string sampleDir = "samples/";
-    string saveDir = "resultSample/";
+    string sampleDir = "/home/wuqaq/project/QT/samples/";
+    string saveDir = "test-resultSample/";
     const char *dir = sampleDir.c_str();
     vector<dirent> dirs = showAllFiles(dir);
     vector<int> randArray;
     vector<string> imgName;
     vector<uint8_t> labelName;
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < NUMOFIMG; i++)
     {
         randArray.push_back(i);
     }
@@ -80,7 +80,7 @@ int main(void)
         vector<uint8_t> l_magicStream;
         int s_magicNumber = 0x0803;
         int l_magicNumber = 0x0801;
-        int numberOfImages = 100;
+        int numberOfImages = NUMOFIMG;
         int numberOfRows = SAMROWS;
         int numberOfCols = SAMCOLS;
 
@@ -108,7 +108,7 @@ int main(void)
         {
             uint8_t tempLabel = i;
             
-            for (int j = 0; j < 10; j++)
+            for (int j = 0; j < NUMOFIMG/10; j++)
             {
                 labelName.push_back(tempLabel);
 
@@ -117,8 +117,8 @@ int main(void)
                 imgName.push_back(filename);
             }
         }
-
-        for (int i = 0; i < 100; i++)
+        
+        for (int i = 0; i < NUMOFIMG; i++)
         {
             int temp = randArray.at(i);
             inLabel << labelName.at(temp);
@@ -195,14 +195,13 @@ int main(void)
     waitKey(0);
     return 0;
 }
-*/
 
-int main(void)
-{
-    vector<uint8_t> features;
-    SaveRoiImage("samples/5/1.jpg", "features.jpg");
-    waitKey(0);
-}
+// int main(void)
+// {
+//     vector<uint8_t> features;
+//     SaveRoiImage("samples/5/1.jpg", "features.jpg");
+//     waitKey(0);
+// }
 
 void GetSingleImageFeature(string name, vector<uint8_t> & features)
 {
@@ -222,7 +221,7 @@ void GetSingleImageFeature(string name, vector<uint8_t> & features)
     resize(binaryImage, newImage, Size(NEWSIZE, NEWSIZE), 0, 0, 3); 
 
     // 5. 归一化
-    newImage = ~newImage/255;
+    //newImage = ~newImage/255;
     
     // 6. 提取
     for (int i = 0; i < newImage.rows; i++)
@@ -262,7 +261,7 @@ void SaveRoiImage(string sourceName, string saveName)
 {
     // 1. 读取图片
     Mat srcImage = imread(sourceName);
-    imshow("s", srcImage);
+    //imshow("s", srcImage);
 
     // 2. 转换为灰度图片
     Mat srcImage_gray;
@@ -278,7 +277,7 @@ void SaveRoiImage(string sourceName, string saveName)
     // 5. 膨胀
     Mat element = getStructuringElement(MORPH_RECT, Size(20, 20/*15, 15*/));  
     erode(binaryImage, binaryImage,element);  
-    imshow("binary", binaryImage);
+    //imshow("binary", binaryImage);
 
     // 6. 寻找轮廓
     vector<vector<Point> > contours;
@@ -298,7 +297,7 @@ void SaveRoiImage(string sourceName, string saveName)
     // 7. 根据最小轮廓把原图的字体截取下来
     Mat roi;
     srcImage(boundRect[1]).copyTo(roi);
-    imshow("roi", roi);
+    //imshow("roi", roi);
 
     // 8. 保存
     cout << saveName << endl;

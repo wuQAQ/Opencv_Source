@@ -6,7 +6,7 @@ clock_t start_time;
 clock_t end_time;
 
 //测试item个数
-int testNum = 10000;
+int testNum = 30;
 
 int reverseInt(int i) {
     unsigned char c1, c2, c3, c4;
@@ -19,7 +19,8 @@ int reverseInt(int i) {
     return ((int)c1 << 24) + ((int)c2 << 16) + ((int)c3 << 8) + c4;
 }
 
-Mat read_mnist_image(const string fileName) {
+Mat read_mnist_image(const string fileName) 
+{
     int magic_number = 0;
     int number_of_images = 0;
     int n_rows = 0;
@@ -62,29 +63,18 @@ Mat read_mnist_image(const string fileName) {
                 file.read((char*)&temp, sizeof(temp));
                 float pixel_value = float((temp + 0.0) / 255.0);
                 DataMat.at<float>(i, j) = pixel_value;
-
-                //打印第一张和最后一张图像数据
-                // if (i == 0) {
-                //     s.at<float>(j / n_cols, j % n_cols) = pixel_value;
-                // }
-                // else if (i == number_of_images - 1) {
-                //     e.at<float>(j / n_cols, j % n_cols) = pixel_value;
-                // }
             }
         }
         end_time = clock();
         cost_time = (end_time - start_time) / CLOCKS_PER_SEC;
         cout << "读取Image数据完毕......" << cost_time << "s\n";
-
-        // imshow("first image", s);
-        // imshow("last image", e);
-        // waitKey(0);
     }
     file.close();
     return DataMat;
 }
 
-Mat read_mnist_label(const string fileName) {
+Mat read_mnist_label(const string fileName) 
+{
     int magic_number;
     int number_of_items;
 
@@ -116,8 +106,8 @@ Mat read_mnist_label(const string fileName) {
             LabelMat.at<unsigned int>(i, 0) = (unsigned int)temp;
 
             //打印第一个和最后一个label
-            // if (i == 0) s = (unsigned int)temp;
-            // else if (i == number_of_items - 1) e = (unsigned int)temp;
+            if (i == 0) s = (unsigned int)temp;
+            else if (i == number_of_items - 1) e = (unsigned int)temp;
         }
         end_time = clock();
         cost_time = (end_time - start_time) / CLOCKS_PER_SEC;
