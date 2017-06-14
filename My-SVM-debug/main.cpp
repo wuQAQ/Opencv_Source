@@ -122,6 +122,7 @@ int main()
         res = std::abs(res - tLabel.at<unsigned int>(i, 0)) <= FLT_EPSILON ? 1.f : 0.f;
         count += res;
     }
+    
     cout << "正确的识别个数 count = " << count << endl;
     cout << "正确率..." << (count + 0.0) / 30 * 100.0 << "%....\n";
     
