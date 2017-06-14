@@ -1,14 +1,27 @@
 #include "svm.h"
 #include <string.h>
-#include<iostream>
+#include <iostream>
+#include <fstream>
+#include <ctime>
 
 using namespace std;
 
 svm_parameter param;
 svm_problem prob;
 
+//计时器
+double cost_time;
+clock_t start_time;
+clock_t end_time;
+
+string trainImage = "mnist_dataset/train-images.idx3-ubyte";
+string trainLabel = "mnist_dataset/train-labels.idx1-ubyte";
+string testImage = "mnist_dataset/t10k-images.idx3-ubyte";
+string testLabel = "mnist_dataset/t10k-labels.idx1-ubyte";
+
 int reverseInt(int i);
-Mat read_mnist_image(const string fileName);
+void read_mnist_image(const string fileName);
+void read_mnist_label(const string fileName);
 
 void init_param()
 {
@@ -34,73 +47,23 @@ void init_setting(void)
 	prob.l = 60000;
 	prob.y = new double[prob.l];
 	prob.x = new svm_node * [prob.l];
-
-	for (int i = 0; i < pro.y; i++)
-	{
-		prob.x[i] = new svm_node[probfeature+1];
-	}
 }
 
 int main(){
 	init_param();
-	prob.l = 4;
-	prob.y = new double[prob.l];
+    init_setting();
 	double d;
-	int probfeature = 2;
 
 	if(param.gamma == 0) param.gamma = 0.5;
-	svm_node *x_space = new svm_node[(probfeature+1)*prob.l];
-	prob.x = new svm_node * [prob.l]; 
-	cout<<"size: "<<sizeof(x_space)<<endl;
+	read_mnist_image(trainImage);
+    read_mnist_label(trainLabel);
 
-	x_space[0].index = 1;
-	x_space[0].value = 190;
-	x_space[1].index = 2;
-	x_space[1].value = 70;
-	x_space[2].index = -1;
-	prob.x[0] = &x_space[0];
-	prob.y[0] = 1;
-	x_space[3].index = 1;
-	x_space[3].value = 180;
-	x_space[4].index = 2;
-	x_space[4].value = 80;
-	x_space[5].index = -1;
-	prob.x[1] = &x_space[3];
-	prob.y[1] = 1;
-	x_space[6].index = 1;
-	x_space[6].value = 161;
-	x_space[7].index = 2;
-	x_space[7].value = 45;
-	x_space[8].index = -1;
-	prob.x[2] = &x_space[6];
-	prob.y[2] = -1;
-	x_space[9].index = 1;
-	x_space[9].value = 163;
-	x_space[10].index = 2;
-	x_space[10].value = 47;
-	x_space[11].index = -1;
-	prob.x[3] = &x_space[9];
-	prob.y[3] = -1;
-	svm_model *model = svm_train(&prob, &param);
-	
-	svm_node xnode[3];
-	xnode[0].index = 1;
-	xnode[0].value = 161;
-	xnode[1].index = 2;
-	xnode[1].value = 85;
-	xnode[2].index = -1;
-	d = svm_predict(model, xnode);
-	cout<<d<<" "<<endl;
+    svm_node *t = prob.x[0];
+    for (int i = 0; i < 785; i++)
+    {
+        cout << t[i].index << ":" << t[i].value << endl;
+    }
 
-	xnode[0].index = 1;
-	xnode[0].value = 180;
-	xnode[1].index = 2;
-	xnode[1].value = 40;
-	xnode[2].index = -1;
-	d = svm_predict(model, xnode);
-	cout<<d<<" "<<endl;
-
-	delete[] x_space;
 	delete[] prob.x;
 	delete[] prob.y;
 }
@@ -117,16 +80,14 @@ int reverseInt(int i)
     return ((int)c1 << 24) + ((int)c2 << 16) + ((int)c3 << 8) + c4;
 }
 
-Mat read_mnist_image(const string fileName) 
+void read_mnist_image(const string fileName) 
 {
     int magic_number = 0;
     int number_of_images = 0;
     int n_rows = 0;
     int n_cols = 0;
 
-    Mat DataMat;
-
-    ifstream file(fileName, ios::binary);
+    ifstream file(fileName.c_str(), ios::binary);
     if (file.is_open())
     {
         cout << "成功打开图像集 ... \n";
@@ -149,48 +110,35 @@ Mat read_mnist_image(const string fileName)
         //-test-
         //number_of_images = testNum;
         //输出第一张和最后一张图，检测读取数据无误
-        Mat s = Mat::zeros(n_rows, n_rows * n_cols, CV_32FC1);
-        Mat e = Mat::zeros(n_rows, n_rows * n_cols, CV_32FC1);
-
         cout << "开始读取Image数据......\n";
         start_time = clock();
-        DataMat = Mat::zeros(number_of_images, n_rows * n_cols, CV_32FC1);
+   
         for (int i = 0; i < number_of_images; i++) {
+            svm_node tempNode[n_rows * n_cols+1];
             for (int j = 0; j < n_rows * n_cols; j++) {
                 unsigned char temp = 0;
                 file.read((char*)&temp, sizeof(temp));
-                float pixel_value = float((temp + 0.0) / 255.0);
-                DataMat.at<float>(i, j) = pixel_value;
-
-                //打印第一张和最后一张图像数据
-                // if (i == 0) {
-                //     s.at<float>(j / n_cols, j % n_cols) = pixel_value;
-                // }
-                // else if (i == number_of_images - 1) {
-                //     e.at<float>(j / n_cols, j % n_cols) = pixel_value;
-                // }
+                double pixel_value = double((temp + 0.0) / 255.0);
+                tempNode[j].index = j;
+                tempNode[j].value = pixel_value;
             }
+            tempNode[n_rows*n_cols].index = -1;
+            prob.x[i] = tempNode;
+            cout << i << endl;
         }
         end_time = clock();
         cost_time = (end_time - start_time) / CLOCKS_PER_SEC;
         cout << "读取Image数据完毕......" << cost_time << "s\n";
-
-        // imshow("first image", s);
-        // imshow("last image", e);
-        // waitKey(0);
     }
     file.close();
-    return DataMat;
 }
 
-Mat read_mnist_label(const string fileName) 
+void read_mnist_label(const string fileName) 
 {
     int magic_number;
     int number_of_items;
 
-    Mat LabelMat;
-
-    ifstream file(fileName, ios::binary);
+    ifstream file(fileName.c_str(), ios::binary);
     if (file.is_open())
     {
         cout << "成功打开Label集 ... \n";
@@ -209,16 +157,15 @@ Mat read_mnist_label(const string fileName)
 
         cout << "开始读取Label数据......\n";
         start_time = clock();
-        LabelMat = Mat::zeros(number_of_items, 1, CV_32SC1);
+        
         for (int i = 0; i < number_of_items; i++) {
             unsigned char temp = 0;
             file.read((char*)&temp, sizeof(temp));
-            LabelMat.at<unsigned int>(i, 0) = (unsigned int)temp;
-
-            //打印第一个和最后一个label
-            // if (i == 0) s = (unsigned int)temp;
-            // else if (i == number_of_items - 1) e = (unsigned int)temp;
+            int tLabel = (int)temp;
+            prob.y[i] = (double)temp;
+            //cout << i << endl;
         }
+
         end_time = clock();
         cost_time = (end_time - start_time) / CLOCKS_PER_SEC;
         cout << "读取Label数据完毕......" << cost_time << "s\n";
@@ -227,5 +174,4 @@ Mat read_mnist_label(const string fileName)
         cout << "last label = " << e << endl;
     }
     file.close();
-    return LabelMat;
 }

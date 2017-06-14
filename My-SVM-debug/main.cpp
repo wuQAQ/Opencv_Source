@@ -52,8 +52,6 @@ string trainImage = "mnist_dataset/train-images.idx3-ubyte";
 string trainLabel = "mnist_dataset/train-labels.idx1-ubyte";
 string testImage = "mnist_dataset/t10k-images.idx3-ubyte";
 string testLabel = "mnist_dataset/t10k-labels.idx1-ubyte";
-//string testImage = "mnist_dataset/train-images.idx3-ubyte";
-//string testLabel = "mnist_dataset/train-labels.idx1-ubyte";
 
 //计时器
 double cost_time_;
@@ -71,6 +69,10 @@ int main()
     cout << trainData.rows << " " << trainData.cols << endl;
     cout << labels.rows << " " << labels.cols << endl;
 
+    for (int i = 0; i < 784; i++)
+    {
+        cout << trainData.at<float>(0, i) << endl;
+    }
     //------------------------ 2. Set up the support vector machines parameters --------------------
     Ptr<SVM> svm = SVM::create();
     svm->setType(SVM::C_SVC);
