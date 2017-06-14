@@ -88,11 +88,11 @@ int main()
     // 2.设置参数
     Ptr<SVM> svm = SVM::create();
     svm->setType(SVM::C_SVC);
-    svm->setKernel(SVM::RBF);
+    svm->setKernel(SVM::LINEAR);
     //svm->setDegree(10.0);
-    svm->setGamma(0.01);
+    //svm->setGamma(0.01);
     //svm->setCoef0(1.0);
-    svm->setC(10.0);
+    //svm->setC(10.0);
     //svm->setNu(0.5);
     //svm->setP(0.1);
     svm->setTermCriteria(TermCriteria(CV_TERMCRIT_EPS, 1000, FLT_EPSILON));
@@ -100,6 +100,7 @@ int main()
     // 3.训练
     cout << "Starting training process" << endl;
     start_time_ = clock();
+    cout << randlabels.t() << endl;
     svm->train(randTrainData, ROW_SAMPLE, randlabels);
     end_time_ = clock();
     cost_time_ = (end_time_ - start_time_) / CLOCKS_PER_SEC;

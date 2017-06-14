@@ -13,28 +13,28 @@
 using namespace std;
 
 // Testing image file name
-const string testing_image_fn = "samples-dataset/samples_10.idx3-ubyte";
+const string testing_image_fn = "samples-dataset/tnn_samples_28.idx3-ubyte";
 //const string testing_image_fn = "mnist/t10k-images.idx3-ubyte";
 
 // Testing label file name
-const string testing_label_fn = "samples-dataset/labels_10.idx1-ubyte";
+const string testing_label_fn = "samples-dataset/tnn_labels_28.idx1-ubyte";
 //const string testing_label_fn = "mnist/t10k-labels.idx1-ubyte";
 
 // Weights file name
-const string model_fn = "output/new10.dat";
+const string model_fn = "output/nnew28.dat";
 
 // Report file name
-const string report_fn = "output/testing-report-10.dat";
+const string report_fn = "output/testing-report-28.dat";
 
 // Number of testing samples
-const int nTesting = 100;
+const int nTesting = 30;
 
 // Image size in MNIST database
-const int width = 10;
-const int height = 10;
+const int width = 28;
+const int height = 28;
 
 const int n1 = width * height; 
-const int n2 = 16;
+const int n2 = 128;
 const int nl2 = 1;
 const int n3 = 10; 
 

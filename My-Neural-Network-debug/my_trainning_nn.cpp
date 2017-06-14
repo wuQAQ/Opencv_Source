@@ -14,28 +14,28 @@ using namespace std;
 
 // Training image file name 
 //const string training_image_fn = "mnist/train-images.idx3-ubyte";
-const string training_image_fn = "samples-dataset/samples_10.idx3-ubyte";
+const string training_image_fn = "samples-dataset/samples_28.idx3-ubyte";
 
 // Training label file name
 //const string training_label_fn = "mnist/train-labels.idx1-ubyte";
-const string training_label_fn = "samples-dataset/labels_10.idx1-ubyte";
+const string training_label_fn = "samples-dataset/labels_28.idx1-ubyte";
 
 // Weights file name
-const string model_fn = "output/new10.dat";
+const string model_fn = "output/nnew28.dat";
 
 // Report file name
 const string report_fn = "output/my-training-report-10.dat";
 
 // Number of training samples
 const int nTraining = 100;
-const int nTrainingTimes = 100;
+const int nTrainingTimes = 1;
 
 // Image size in MNIST database
-const int width = 10;
-const int height = 10;
+const int width = 28;
+const int height = 28;
 
 const int n1 = width * height; 
-const int n2 = 16;
+const int n2 = 128;
 const int nl2 = 1;
 const int n3 = 10; 
 

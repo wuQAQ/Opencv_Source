@@ -202,6 +202,7 @@ Mat getEigenvalues(string path)
             int white = countNonZero(tempRoi);
             int black = tempRoi.total()-white;
             float blackRate = (float)black / tempRoi.total();
+            //float tempblack = 1.0 - blackRate;
             //将其放入25X1的Mat中
             result.at<float>(i*5+j, 0) = blackRate;
         }

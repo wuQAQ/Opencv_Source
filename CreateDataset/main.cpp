@@ -23,8 +23,8 @@ using namespace cv;
 #define SAMCOLS   28
 #define NEWSIZE   28
 #define NUMOFIMG  30
-const string samples_image_fn = "tsvm_samples_28.idx3-ubyte";
-const string labels_image_fn = "tsvm_labels_28.idx1-ubyte";
+const string samples_image_fn = "tnn_samples_28.idx3-ubyte";
+const string labels_image_fn = "tnn_labels_28.idx1-ubyte";
 
 int GetBigOrLitterEndian(void);
 vector<dirent> showAllFiles (const char * dir_name);
@@ -35,7 +35,7 @@ int ReverseInt (int i);
 
 int main(void)
 {
-    string sampleDir = "/home/wuqaq/project/QT/samples/";
+    string sampleDir = "/home/wuqaq/project/QTLibary/samples/";
     string saveDir = "test-resultSample/";
     const char *dir = sampleDir.c_str();
     vector<dirent> dirs = showAllFiles(dir);
@@ -221,7 +221,7 @@ void GetSingleImageFeature(string name, vector<uint8_t> & features)
     resize(binaryImage, newImage, Size(NEWSIZE, NEWSIZE), 0, 0, 3); 
 
     // 5. 归一化
-    //newImage = ~newImage/255;
+    newImage = ~newImage/255;
     
     // 6. 提取
     for (int i = 0; i < newImage.rows; i++)
