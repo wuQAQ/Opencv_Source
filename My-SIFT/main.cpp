@@ -1268,7 +1268,7 @@ void Convolve1DWidth(float* kern, int dim, Mat & src, Mat & dst)
 }  
 
 float ConvolveLocWidth(float* kernel, int dim, Mat & src, int x, int y)   
-{  
+{   
     //#define Src(ROW,COL) ((float *)(src->data.fl + src->step/sizeof(float) *(ROW)))[(COL)]  
     float pixel = 0;  
     int col;  
