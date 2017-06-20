@@ -206,6 +206,7 @@ int main()
             mosaicVertical1=MosaicVertical( mosaicVertical1, mosaicHorizen1 );  
         }  
     }  
+    mosaicVertical1 = ~mosaicVertical1;
     imshow("mosaicVertical1", mosaicVertical1);
     waitKey(0);
 
